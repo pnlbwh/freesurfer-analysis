@@ -52,9 +52,9 @@ def update_graph(yaxis_column_name):
         'data': [
             # inliers
             dict(
-                x=serial[inliers == True],
-                y=dff[yaxis_column_name].values[inliers == True],
-                text=[f'Subject: {subjects[i]}' for i in np.where(inliers==True)[0]],
+                x=serial[inliers],
+                y=dff[yaxis_column_name].values[inliers],
+                text=[f'Subject: {id}' for id in subjects[inliers]],
                 mode='markers',
                 name='inliers',
                 marker={
@@ -65,9 +65,9 @@ def update_graph(yaxis_column_name):
             ),
             # outliers
             dict(
-                x=serial[inliers == False],
-                y=dff[yaxis_column_name].values[inliers == False],
-                text=[f'Subject: {subjects[i]}' for i in np.where(inliers == False)[0]],
+                x=serial[~inliers],
+                y=dff[yaxis_column_name].values[~inliers],
+                text=[f'Subject: {id}' for id in subjects[~inliers]],
                 mode='markers',
                 name='outliers',
                 marker={

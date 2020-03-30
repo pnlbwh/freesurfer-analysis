@@ -4,6 +4,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import plotly.graph_objects as go
+from os.path import isfile
 
 import pandas as pd
 import numpy as np
@@ -48,7 +50,7 @@ def update_graph(yaxis_column_name):
 
     serial = np.arange(L)
 
-    return {
+    fig= go.Figure({
         'data': [
             # inliers
             dict(
@@ -82,7 +84,7 @@ def update_graph(yaxis_column_name):
                 x=serial,
                 y=L * [val_mean],
                 mode='lines',
-                line={'color': 'black', 'width':'4'},
+                line={'color': 'black', 'width':4},
                 name='mean'
             ),
             # +1 SD
@@ -90,7 +92,7 @@ def update_graph(yaxis_column_name):
                 x=serial,
                 y=L * [val_mean+val_std],
                 mode='lines',
-                line= {'dash': 'dash', 'color': 'green', 'width':'4'},
+                line= {'dash': 'dash', 'color': 'green', 'width':4},
                 name=f'mean + {NUM_STD} x std'
             ),
             # -1 SD
@@ -98,7 +100,7 @@ def update_graph(yaxis_column_name):
                 x=serial,
                 y=L * [val_mean-val_std],
                 mode='lines',
-                line={'dash': 'dash', 'color': 'green', 'width':'4'},
+                line={'dash': 'dash', 'color': 'green', 'width':4},
                 name=f'mean - {NUM_STD} x std'
             )
         ],
@@ -111,9 +113,23 @@ def update_graph(yaxis_column_name):
             },
             margin={'l': 50, 'b': 40, 't': 30, 'r': 0},
             hovermode='closest',
+            height= 400
         )
-    }
+    })
+
+    out_html= f'C://Users/tashr/Documents/fs-stats/{yaxis_column_name}.html'
+    if not isfile(out_html):
+        fig.write_html(out_html, include_plotlyjs= 'directory')
+
+    return fig
 
 
 if __name__ == '__main__':
+    # save all figures
+    for column_name in available_indicators:
+        update_graph(column_name)
+
+    # write outlier summary
+    pass
+    
     app.run_server(debug=True, port= 8040, host= 'localhost')

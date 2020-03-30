@@ -53,19 +53,31 @@ def update_graph(yaxis_column_name, hoverData):
 
     return {
         'data': [
-            # points
+            # inliers
             dict(
-                x=[i for i in range(L)],
-                y=dff[yaxis_column_name].values,
-                text= f'Sub: {sub_id}, {yaxis_column_name}',
+                x=serial[inliers == True],
+                y=dff[yaxis_column_name].values[inliers == True],
+                text=f'Sub: {sub_id}, {yaxis_column_name}',
                 mode='markers',
-                name='data',
+                name='inliers',
                 marker={
                     'size': 15,
                     'opacity': 0.5,
                     'line': {'width': 0.5, 'color': 'white'},
-                    'color': ['blue' if y<val_mean+val_std and y>val_mean-val_std
-                              else 'red' for y in dff[yaxis_column_name].values]
+                }
+            ),
+            # outliers
+            dict(
+                x=serial[inliers == False],
+                y=dff[yaxis_column_name].values[inliers == False],
+                text=f'Sub: {sub_id}, {yaxis_column_name}',
+                mode='markers',
+                name='outliers',
+                marker={
+                    'size': 15,
+                    'opacity': 0.5,
+                    'line': {'width': 0.5, 'color': 'white'},
+                    'color': 'red'
                 }
             ),
             # mean

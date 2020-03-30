@@ -36,9 +36,8 @@ app.layout = html.Div([
 
 @app.callback(
     Output('indicator-graphic', 'figure'),
-    [Input('yaxis-column', 'value'),
-     Input('indicator-graphic', 'hoverData')])
-def update_graph(yaxis_column_name, hoverData):
+    [Input('yaxis-column', 'value')])
+def update_graph(yaxis_column_name):
 
     subjects = dff['Measure:volume'].values
     L= len(subjects)
@@ -49,15 +48,13 @@ def update_graph(yaxis_column_name, hoverData):
 
     serial = np.arange(L)
 
-    sub_id= subjects[hoverData['points'][0]['x']] if hoverData else subjects[0]
-
     return {
         'data': [
             # inliers
             dict(
                 x=serial[inliers == True],
                 y=dff[yaxis_column_name].values[inliers == True],
-                text=f'Sub: {sub_id}, {yaxis_column_name}',
+                text=[f'Subject: {subjects[i]}' for i in np.where(inliers==True)[0]],
                 mode='markers',
                 name='inliers',
                 marker={
@@ -70,7 +67,7 @@ def update_graph(yaxis_column_name, hoverData):
             dict(
                 x=serial[inliers == False],
                 y=dff[yaxis_column_name].values[inliers == False],
-                text=f'Sub: {sub_id}, {yaxis_column_name}',
+                text=[f'Subject: {subjects[i]}' for i in np.where(inliers == False)[0]],
                 mode='markers',
                 name='outliers',
                 marker={

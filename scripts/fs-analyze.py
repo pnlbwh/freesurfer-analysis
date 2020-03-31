@@ -69,7 +69,7 @@ def plot_graph(yaxis_column_name):
                 line={'color': 'black', 'width': 4},
                 name='mean'
             ),
-            # +1 SD
+            # mean+ NUM*std
             dict(
                 x=serial,
                 y=L * [val_mean + NUM_STD* val_std],
@@ -77,7 +77,7 @@ def plot_graph(yaxis_column_name):
                 line={'dash': 'dash', 'color': 'green', 'width': 4},
                 name=f'mean + {NUM_STD} x std'
             ),
-            # -1 SD
+            # mean- NUM_STD*std
             dict(
                 x=serial,
                 y=L * [val_mean - NUM_STD* val_std],
@@ -100,8 +100,8 @@ def plot_graph(yaxis_column_name):
     })
 
     out_html = f'C://Users/tashr/Documents/fs-stats/{yaxis_column_name}.html'
-    # if not isfile(out_html):
-    fig.write_html(out_html, include_plotlyjs='directory')
+    if not isfile(out_html):
+        fig.write_html(out_html, include_plotlyjs='directory')
 
     return (fig, inliers)
 
@@ -131,6 +131,7 @@ def update_graph(yaxis_column_name):
 
 
 if __name__ == '__main__':
+
     # save all figures
     df_inliers= df.copy()
     for column_name in available_indicators:

@@ -14,48 +14,30 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-dff = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
+df = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
 
-available_indicators = dff.columns.values[1:]
+available_indicators = df.columns.values[1:]
+subjects = df['Measure:volume'].values
 
 # acceptable range of standard deviation
-NUM_STD= 1
+NUM_STD= 2
 
-app.layout = html.Div([
 
-                html.Div([
-                    dcc.Dropdown(
-                        id='yaxis-column',
-                        options=[{'label': i, 'value': i} for i in available_indicators],
-                        value='Left-Lateral-Ventricle'
-                    )
-                ],
-                style={'width': '48%', 'display': 'inline-block'}),
-
-             dcc.Graph(id='indicator-graphic'),
-
-            ])
-
-@app.callback(
-    Output('indicator-graphic', 'figure'),
-    [Input('yaxis-column', 'value')])
-def update_graph(yaxis_column_name):
-
-    subjects = dff['Measure:volume'].values
-    L= len(subjects)
-    val_mean= dff[yaxis_column_name].values.mean()
-    val_std= dff[yaxis_column_name].values.std()
-    inliers= np.array([True if y<val_mean+val_std and y>val_mean-val_std
-              else False for y in dff[yaxis_column_name].values])
+def plot_graph(yaxis_column_name):
+    L = len(subjects)
+    val_mean = df[yaxis_column_name].values.mean()
+    val_std = df[yaxis_column_name].values.std()
+    inliers = np.array([True if y <= val_mean + NUM_STD* val_std and y >= val_mean - NUM_STD* val_std
+                        else False for y in df[yaxis_column_name].values])
 
     serial = np.arange(L)
 
-    fig= go.Figure({
+    fig = go.Figure({
         'data': [
             # inliers
             dict(
                 x=serial[inliers],
-                y=dff[yaxis_column_name].values[inliers],
+                y=df[yaxis_column_name].values[inliers],
                 text=[f'Subject: {id}' for id in subjects[inliers]],
                 mode='markers',
                 name='inliers',
@@ -68,7 +50,7 @@ def update_graph(yaxis_column_name):
             # outliers
             dict(
                 x=serial[~inliers],
-                y=dff[yaxis_column_name].values[~inliers],
+                y=df[yaxis_column_name].values[~inliers],
                 text=[f'Subject: {id}' for id in subjects[~inliers]],
                 mode='markers',
                 name='outliers',
@@ -84,23 +66,23 @@ def update_graph(yaxis_column_name):
                 x=serial,
                 y=L * [val_mean],
                 mode='lines',
-                line={'color': 'black', 'width':4},
+                line={'color': 'black', 'width': 4},
                 name='mean'
             ),
             # +1 SD
             dict(
                 x=serial,
-                y=L * [val_mean+val_std],
+                y=L * [val_mean + NUM_STD* val_std],
                 mode='lines',
-                line= {'dash': 'dash', 'color': 'green', 'width':4},
+                line={'dash': 'dash', 'color': 'green', 'width': 4},
                 name=f'mean + {NUM_STD} x std'
             ),
             # -1 SD
             dict(
                 x=serial,
-                y=L * [val_mean-val_std],
+                y=L * [val_mean - NUM_STD* val_std],
                 mode='lines',
-                line={'dash': 'dash', 'color': 'green', 'width':4},
+                line={'dash': 'dash', 'color': 'green', 'width': 4},
                 name=f'mean - {NUM_STD} x std'
             )
         ],
@@ -113,23 +95,52 @@ def update_graph(yaxis_column_name):
             },
             margin={'l': 50, 'b': 40, 't': 30, 'r': 0},
             hovermode='closest',
-            height= 400
+            height=400
         )
     })
 
-    out_html= f'C://Users/tashr/Documents/fs-stats/{yaxis_column_name}.html'
-    if not isfile(out_html):
-        fig.write_html(out_html, include_plotlyjs= 'directory')
+    out_html = f'C://Users/tashr/Documents/fs-stats/{yaxis_column_name}.html'
+    # if not isfile(out_html):
+    fig.write_html(out_html, include_plotlyjs='directory')
+
+    return (fig, inliers)
+
+app.layout = html.Div([
+
+        html.Div([
+            dcc.Dropdown(
+                id='yaxis-column',
+                options=[{'label': i, 'value': i} for i in available_indicators],
+                value='Left-Lateral-Ventricle'
+            )
+        ],
+        style={'width': '48%', 'display': 'inline-block'}),
+
+     dcc.Graph(id='indicator-graphic'),
+
+    ])
+
+@app.callback(
+    Output('indicator-graphic', 'figure'),
+    [Input('yaxis-column', 'value')])
+def update_graph(yaxis_column_name):
+
+    fig, _= plot_graph(yaxis_column_name)
 
     return fig
 
 
 if __name__ == '__main__':
     # save all figures
+    df_inliers= df.copy()
     for column_name in available_indicators:
-        update_graph(column_name)
+        print(column_name)
+        _, inliers= plot_graph(column_name)
 
-    # write outlier summary
-    pass
-    
+        # write outlier summary
+        df_inliers[column_name]= ['x' if not id else '' for id in inliers]
+
+
+    df_inliers.to_csv(f'C://Users/tashr/Documents/fs-stats/outliers.csv', index=False)
+
     app.run_server(debug=True, port= 8040, host= 'localhost')

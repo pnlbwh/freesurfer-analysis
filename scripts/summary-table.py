@@ -5,7 +5,7 @@ from dash.dependencies import Input, Output
 import dash_table
 import pandas as pd
 
-df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
+df = pd.read_csv('outliers.csv')
 
 app = dash.Dash(__name__)
 
@@ -17,12 +17,12 @@ data_condition=[{
 for d in [{
             'if': {
             'column_id': c,
-            'filter_query': f'{{{c}}} eq x',
+            'filter_query': f'{{{c}}} gt 2',
             },
             'backgroundColor': 'red',
             'color': 'black',
             'fontWeight': 'bold'
-        } for c in df.columns]:
+        } for c in df.columns[1:]]:
     data_condition.append(d)
 
 

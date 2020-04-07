@@ -36,14 +36,18 @@ app.layout = html.Div([
                 value='snapshot'
             )
         ],
-        style = {'width': '10%',}), # 'display': 'inline-block'}),
+        style = {'width': '10%',}),
         html.Br(),
 
         dash_table.DataTable(
         id='table',
-        columns=[{'name': i, 'id': i, 'deletable': True} for i in df.columns],
+        columns=[{'name': i,
+                  'id': i,
+                  'hideable': True
+                  } for i in df.columns],
         data=df.to_dict('records'),
         filter_action='native',
+        sort_action='native',
         style_data_conditional= data_condition,
 
         style_header={
@@ -77,3 +81,4 @@ def get_active_cell(selected_cells, view_type):
 
 if __name__ == '__main__':
     app.run_server(debug=True, port= 8040, host= 'localhost')
+

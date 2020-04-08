@@ -3,9 +3,10 @@ import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import dash_table
+from dash_table.Format import Format
 import pandas as pd
 
-df = pd.read_csv('outliers.csv')
+df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
 
 app = dash.Dash(__name__)
 
@@ -43,12 +44,15 @@ app.layout = html.Div([
         id='table',
         columns=[{'name': i,
                   'id': i,
-                  'hideable': True
+                  'hideable': True,
+                  'type': 'numeric',
+                  'format': Format(precision=4),
                   } for i in df.columns],
         data=df.to_dict('records'),
         filter_action='native',
         sort_action='native',
         style_data_conditional= data_condition,
+
 
         style_header={
             'backgroundColor': 'rgb(230, 230, 230)',
@@ -58,7 +62,7 @@ app.layout = html.Div([
         tooltip_data= [{c:
                 {
                     'type': 'text',
-                    'value': f'{r},{c}'
+                    'value': f'{r}, {c}'
                 } for c in df.columns
         } for r in df[df.columns[0]].values]
     ),

@@ -5,7 +5,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
-from os.path import isfile
+from os.path import isfile, join as pjoin
 
 import pandas as pd
 import numpy as np
@@ -14,10 +14,12 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-df = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
+# df = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
+df = pd.read_csv('C://Users/tashr/Documents/aparcstats_lh.csv')
+outDir= 'C://Users/tashr/Documents/fs-stats-aparc/'
 
-available_indicators = df.columns.values[1:]
-subjects = df['Measure:volume'].values
+regions = df.columns.values[1:]
+subjects = df[regions[0]].values
 
 # acceptable range of standard deviation
 NUM_STD= 2
@@ -101,7 +103,7 @@ def plot_graph(yaxis_column_name):
         )
     })
 
-    out_html = f'C://Users/tashr/Documents/fs-stats/{yaxis_column_name}.html'
+    out_html = pjoin(outDir,f'{yaxis_column_name}.html')
     if not isfile(out_html):
         fig.write_html(out_html, include_plotlyjs='directory')
 
@@ -112,8 +114,8 @@ app.layout = html.Div([
         html.Div([
             dcc.Dropdown(
                 id='yaxis-column',
-                options=[{'label': i, 'value': i} for i in available_indicators],
-                value='Left-Lateral-Ventricle'
+                options=[{'label': i, 'value': i} for i in regions],
+                value=regions[0]
             )
         ],
         style={'width': '48%', 'display': 'inline-block'}),
@@ -136,7 +138,7 @@ if __name__ == '__main__':
 
     # save all figures
     df_inliers= df.copy()
-    for column_name in available_indicators:
+    for column_name in regions:
         print(column_name)
         _, inliers, zscores= plot_graph(column_name)
 
@@ -145,6 +147,6 @@ if __name__ == '__main__':
         df_inliers[column_name] = zscores
 
 
-    df_inliers.to_csv(f'C://Users/tashr/Documents/fs-stats/outliers.csv', index=False)
+    df_inliers.to_csv(pjoin(outDir, 'outliers.csv'), index=False)
 
     app.run_server(debug=True, port= 8060, host= 'localhost')

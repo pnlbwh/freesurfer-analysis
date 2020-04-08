@@ -5,7 +5,10 @@ from dash.dependencies import Input, Output
 import dash_table
 from dash_table.Format import Format
 import pandas as pd
+import webbrowser
+from subprocess import check_call
 
+PORT=8040
 df = pd.read_csv('C://Users/tashr/Documents/fs-stats-aparc/outliers.csv')
 
 app = dash.Dash(__name__)
@@ -52,6 +55,10 @@ app.layout = html.Div([
         filter_action='native',
         sort_action='native',
         style_data_conditional= data_condition,
+        style_cell={
+            # 'textAlign': 'left',
+            'whiteSpace': 'pre-wrap'
+        },
 
 
         style_header={
@@ -80,9 +87,13 @@ def get_active_cell(selected_cells, view_type):
         col= temp['column']
         print(row, col)
 
+    # nilearn or freeview rendering
+    # check_call view-roi.py
     print(view_type)
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port= 8040, host= 'localhost')
+    # webbrowser.open_new(f'http://localhost:{PORT}')
+    # check_call('python grouped-summary.py', shell=True)
+    app.run_server(debug=True, port= PORT, host= 'localhost')
 

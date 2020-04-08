@@ -13,14 +13,19 @@ import sys
 # brain_mgh= pjoin(fsdir,'mri/brain.mgz')
 # aseg_mgh= pjoin(fsdir,'mri/aseg.mgz')
 brain_mgh= r'C:\\Users\\tashr\\Documents\brain.mgz'
-aseg_mgh= r'C:\\Users\\tashr\\Documents\aseg.mgz'
+aseg_mgh= r'C:\\Users\\tashr\\Documents\aparc+aseg.mgz'
 
 roi_mgh= r'C:\\Users\\tashr\\Documents\roi.mgz'
 
-lut= r'C:\\Users\\tashr\\Documents\ASegStatsLUT.txt'
-region= 'Left-Lateral-Ventricle'
+# lut= r'C:\\Users\\tashr\\Documents\ASegStatsLUT.txt'
+lut= r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
+# region= 'Left-Lateral-Ventricle'
 # region= 'Left-Thalamus-Proper'
+table_header= 'lh_transversetemporal_volume'
+hemis, ctx, _= table_header.split('_')
+region= f'ctx-{hemis}-{ctx}'
 snapshot= r'C:\\Users\\tashr\\Documents\snapshot.png'
+OPACITY= 0.8
 
 def load_lut(lut):
 
@@ -35,10 +40,18 @@ def load_lut(lut):
     return rows
 
 rows= load_lut(lut)
+invalid= True
 for i in range(len(rows)):
     if rows[i][1]==region:
         color= ListedColormap([int(x)/255 for x in rows[i][2:-1]])
         label= int(rows[i][0])
+        invalid= False
+        break
+
+if invalid:
+    print(f'{region} is not a valid aparc or aseg segment')
+    exit()
+
 
 brain= fsload(brain_mgh)
 aseg= fsload(aseg_mgh)
@@ -46,11 +59,13 @@ aseg= fsload(aseg_mgh)
 brain_nifti= Nifti1Image(brain.get_fdata(), affine= brain.affine)
 
 roi= (aseg.get_fdata()==label)*label
-roi_nifti= Nifti1Image(roi, affine= brain.affine)
-MGHImage(roi, affine= brain.affine, header= brain.header).to_filename(roi_mgh)
+roi_nifti= Nifti1Image(roi, affine= aseg.affine)
+MGHImage(roi, affine= aseg.affine, header= aseg.header).to_filename(roi_mgh)
 
-plot_roi(roi_nifti, bg_img= brain_nifti, cmap= color, output_file=snapshot)
+plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color, output_file=snapshot)
 
 # background brain.mgz
 # foreground roi.mgz
-check_call([f'freeview -v {brain_mgh} {roi_mgh}:colormap=lut:opacity=0.5'], shell=True)
+# check_call([f'freeview -v {brain_mgh} {roi_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+check_call([f'freeview -v {brain_mgh} {roi_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+

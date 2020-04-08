@@ -30,6 +30,8 @@ def plot_graph(yaxis_column_name):
     inliers = np.array([True if y <= val_mean + NUM_STD* val_std and y >= val_mean - NUM_STD* val_std
                         else False for y in df[yaxis_column_name].values])
 
+    zscores= np.array([round((y-val_mean)/val_std,4) if y else 0 for y in df[yaxis_column_name].values])
+
     serial = np.arange(L)
 
     fig = go.Figure({
@@ -103,7 +105,7 @@ def plot_graph(yaxis_column_name):
     if not isfile(out_html):
         fig.write_html(out_html, include_plotlyjs='directory')
 
-    return (fig, inliers)
+    return (fig, inliers, zscores)
 
 app.layout = html.Div([
 
@@ -125,7 +127,7 @@ app.layout = html.Div([
     [Input('yaxis-column', 'value')])
 def update_graph(yaxis_column_name):
 
-    fig, _= plot_graph(yaxis_column_name)
+    fig, _, _= plot_graph(yaxis_column_name)
 
     return fig
 
@@ -136,12 +138,13 @@ if __name__ == '__main__':
     df_inliers= df.copy()
     for column_name in available_indicators:
         print(column_name)
-        _, inliers= plot_graph(column_name)
+        _, inliers, zscores= plot_graph(column_name)
 
         # write outlier summary
-        df_inliers[column_name]= ['x' if not id else '' for id in inliers]
+        # df_inliers[column_name]= ['x' if not id else '' for id in inliers]
+        df_inliers[column_name] = zscores
 
 
     df_inliers.to_csv(f'C://Users/tashr/Documents/fs-stats/outliers.csv', index=False)
 
-    app.run_server(debug=True, port= 8040, host= 'localhost')
+    app.run_server(debug=True, port= 8060, host= 'localhost')

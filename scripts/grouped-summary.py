@@ -9,8 +9,8 @@ import pandas as pd
 
 app = dash.Dash(__name__)
 
-df= pd.read_csv(r'C:\Users\tashr\Documents\fs-stats\outliers.csv')
-summary= r'C:\Users\tashr\Documents\fs-stats\grouped-by-subjects.csv'
+df= pd.read_csv(r'C:\Users\tashr\Documents\fs-stats-aparc\outliers.csv')
+summary= r'C:\Users\tashr\Documents\fs-stats-aparc\grouped-by-subjects.csv'
 
 app.layout = html.Div([
 

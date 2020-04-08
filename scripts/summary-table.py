@@ -6,7 +6,7 @@ import dash_table
 from dash_table.Format import Format
 import pandas as pd
 
-df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
+df = pd.read_csv('C://Users/tashr/Documents/fs-stats-aparc/outliers.csv')
 
 app = dash.Dash(__name__)
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from matplotlib import pyplot
 from nilearn.plotting import plot_roi
 from nibabel import Nifti1Image
 from nibabel.freesurfer import load as fsload
@@ -7,7 +8,7 @@ from nibabel.freesurfer import MGHImage
 from matplotlib.colors import ListedColormap
 from subprocess import check_call
 from os.path import join as pjoin
-from os import remove
+from os import remove, close
 from tempfile import mkstemp
 
 OPACITY = 0.8
@@ -38,10 +39,8 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
         seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
         region= table_header
 
-    temp = mkstemp(suffix='.mgz', prefix=region+'-')
-    roi_mgh= temp[1]
-    temp = mkstemp(suffix='.png', prefix=region+'-')
-    snapshot= temp[1]
+    roi_mgh= mkstemp(suffix='.mgz', prefix=region+'-')
+
 
     invalid= True
     for i in range(len(lut)):
@@ -63,11 +62,15 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 
     roi= (seg.get_fdata()==label)*label
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
-    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh)
+    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh[1])
 
     if method=='snapshot':
         plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color)
-        # remove(snapshot)
+        pyplot.show()
+        # snapshot = mkstemp(suffix='.png', prefix=region+'-')
+        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, output_file= snapshot[1])
+        # close(snapshot[0])
+        # remove(snapshot[1])
     elif method=='freeview':
 
         if cortex:
@@ -92,7 +95,8 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
                         f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
 
 
-        # remove(roi_mgh)
+    close(roi_mgh[0])
+    remove(roi_mgh[1])
 
 if __name__=='__main__':
     fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'

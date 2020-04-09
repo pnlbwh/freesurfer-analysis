@@ -7,65 +7,102 @@ from nibabel.freesurfer import MGHImage
 from matplotlib.colors import ListedColormap
 from subprocess import check_call
 from os.path import join as pjoin
-import sys
+from os import remove
+from tempfile import mkstemp
 
-# fsdir=''
-# brain_mgh= pjoin(fsdir,'mri/brain.mgz')
-# aseg_mgh= pjoin(fsdir,'mri/aseg.mgz')
-brain_mgh= r'C:\\Users\\tashr\\Documents\brain.mgz'
-aseg_mgh= r'C:\\Users\\tashr\\Documents\aparc+aseg.mgz'
-
-roi_mgh= r'C:\\Users\\tashr\\Documents\roi.mgz'
-
-# lut= r'C:\\Users\\tashr\\Documents\ASegStatsLUT.txt'
-lut= r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
-# region= 'Left-Lateral-Ventricle'
-# region= 'Left-Thalamus-Proper'
-table_header= 'lh_transversetemporal_volume'
-hemis, ctx, _= table_header.split('_')
-region= f'ctx-{hemis}-{ctx}'
-snapshot= r'C:\\Users\\tashr\\Documents\snapshot.png'
-OPACITY= 0.8
+OPACITY = 0.8
 
 def load_lut(lut):
 
     with open(lut) as f:
         content= f.read().split('\n')
 
-    rows=[]
+    lut_colors=[]
     for line in content:
         if line and '#' not in line:
-            rows.append(line.split())
+            lut_colors.append(line.split())
 
-    return rows
+    return lut_colors
 
-rows= load_lut(lut)
-invalid= True
-for i in range(len(rows)):
-    if rows[i][1]==region:
-        color= ListedColormap([int(x)/255 for x in rows[i][2:-1]])
-        label= int(rows[i][0])
-        invalid= False
-        break
+def render_roi(table_header, fsdir, lut, method='snapshot'):
 
-if invalid:
-    print(f'{region} is not a valid aparc or aseg segment')
-    exit()
+    # define files according to FreeSurfer structure
+    brain_mgh= pjoin(fsdir, 'mri/brain.mgz')
+
+    if 'lh' in table_header or 'rh' in table_header:
+        hemis, ctx, _ = table_header.split('_')
+        region = f'ctx-{hemis}-{ctx}'
+        seg_mgh=pjoin(fsdir, 'mri/aparc+aseg.mgz')
+        cortex= True
+    else:
+        seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
+        region= table_header
+
+    temp = mkstemp(suffix='.mgz', prefix=region+'-')
+    roi_mgh= temp[1]
+    temp = mkstemp(suffix='.png', prefix=region+'-')
+    snapshot= temp[1]
+
+    invalid= True
+    for i in range(len(lut)):
+        if lut[i][1]==region:
+            color= ListedColormap([int(x)/255 for x in lut[i][2:-1]])
+            label= int(lut[i][0])
+            invalid= False
+            break
+
+    if invalid:
+        print(f'{region} is not a valid aparc or aseg segment')
+        exit()
 
 
-brain= fsload(brain_mgh)
-aseg= fsload(aseg_mgh)
+    brain= fsload(brain_mgh)
+    seg= fsload(seg_mgh)
 
-brain_nifti= Nifti1Image(brain.get_fdata(), affine= brain.affine)
+    brain_nifti= Nifti1Image(brain.get_fdata(), affine= brain.affine)
 
-roi= (aseg.get_fdata()==label)*label
-roi_nifti= Nifti1Image(roi, affine= aseg.affine)
-MGHImage(roi, affine= aseg.affine, header= aseg.header).to_filename(roi_mgh)
+    roi= (seg.get_fdata()==label)*label
+    roi_nifti= Nifti1Image(roi, affine= seg.affine)
+    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh)
 
-plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color, output_file=snapshot)
+    if method=='snapshot':
+        plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color)
+        # remove(snapshot)
+    elif method=='freeview':
 
-# background brain.mgz
-# foreground roi.mgz
-# check_call([f'freeview -v {brain_mgh} {roi_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
-check_call([f'freeview -v {brain_mgh} {roi_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+        if cortex:
+            # show aparc+aseg
+            # background brain.mgz
+            # foreground roi.mgz and aparc+aseg.mgz
+            # surfaces pial and white
+            white_mgh= pjoin(fsdir, f'surf/{hemis}.white')
+            pial_mgh= pjoin(fsdir, f'surf/{hemis}.pial')
+            check_call([f'freeview -v {brain_mgh} '
+                        f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
+                        f'{seg_mgh}:colormap=lut:opacity={OPACITY} '
+                        f'-f {white_mgh}:edgecolor=red '
+                        f'{pial_mgh}:edgecolor=yellow'], shell=True)
+
+        else:
+            # show aseg
+            # background brain.mgz
+            # foreground roi.mgz and aseg.mgz
+            check_call([f'freeview -v {brain_mgh} '
+                        f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
+                        f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+
+
+        # remove(roi_mgh)
+
+if __name__=='__main__':
+    fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
+    lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
+
+    lut_colors= load_lut(lut)
+    table_header = 'Left-Thalamus-Proper'
+    # table_header= 'Left-Lateral-Ventricle'
+    # table_header = 'lh_transversetemporal_volume'
+    table_header= 'rh_frontalpole_volume'
+    render_roi(table_header, fsdir, lut_colors, method='snapshot')
+
 

@@ -39,7 +39,7 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
         seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
         region= table_header
 
-    roi_mgh= mkstemp(suffix='.mgz', prefix=region+'-')
+    froi, roi_mgh= mkstemp(suffix='.mgz', prefix=region+'-')
 
 
     invalid= True
@@ -62,15 +62,15 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 
     roi= (seg.get_fdata()==label)*label
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
-    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh[1])
+    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh)
 
     if method=='snapshot':
         plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color)
         pyplot.show()
-        # snapshot = mkstemp(suffix='.png', prefix=region+'-')
-        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, output_file= snapshot[1])
-        # close(snapshot[0])
-        # remove(snapshot[1])
+        # fsnap, snapshot = mkstemp(suffix='.png', prefix=region+'-')
+        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, output_file= snapshot)
+        # close(fsnap)
+        # remove(snapshot)
     elif method=='freeview':
 
         if cortex:
@@ -95,12 +95,14 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
                         f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
 
 
-    close(roi_mgh[0])
-    remove(roi_mgh[1])
+    close(froi)
+    remove(roi_mgh)
 
 if __name__=='__main__':
-    fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
-    lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
+    # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
+    # lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
+    fsdir = '/home/tb571/freesurfer/subjects/434-t1w_mprage-xc'
+    lut = '/home/tb571/freesurfer/FreeSurferColorLUT.txt'
 
     lut_colors= load_lut(lut)
     table_header = 'Left-Thalamus-Proper'

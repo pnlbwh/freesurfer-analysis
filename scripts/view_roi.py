@@ -36,8 +36,9 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
         seg_mgh=pjoin(fsdir, 'mri/aparc+aseg.mgz')
         cortex= True
     else:
-        seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
         region= table_header
+        seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
+        cortex= False
 
     froi, roi_mgh= mkstemp(suffix='.mgz', prefix=region+'-')
 

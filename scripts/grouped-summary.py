@@ -4,15 +4,17 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
-import dash_table
+from dash_table import DataTable
 import pandas as pd
+import argparse
+from os.path import isfile, isdir, abspath, dirname, join as pjoin
+from os import makedirs, remove
 import webbrowser
+from glob import glob
+from subprocess import Popen
 
-PORT=8020
+PORT=8050
 app = dash.Dash(__name__)
-
-df= pd.read_csv(r'C:\Users\tashr\Documents\fs-stats-aparc\outliers.csv')
-summary= r'C:\Users\tashr\Documents\fs-stats-aparc\grouped-by-subjects.csv'
 
 app.layout = html.Div([
 
@@ -27,7 +29,7 @@ app.layout = html.Div([
         style = {'width': '20%',}),
         html.Br(),
 
-        dash_table.DataTable(
+        DataTable(
             id='summary',
             filter_action='native',
             sort_action='native',
@@ -80,11 +82,44 @@ def update_summary(group_by):
             outliers= df[df.columns[0]].values[df[region]>2]
             dfs.loc[i] = [region, len(outliers), '\n'.join([x for x in outliers])]
 
-    
+    summary= f'group-by-{group_by}.csv'
+    if not isfile(summary):
+        dfs.to_csv(pjoin(outDir, summary), index=False)
+
     return [dfs.to_dict('records'), columns]
 
 if __name__ == '__main__':
-    # webbrowser.open_new(f'http://localhost:{PORT}')
-    app.run_server(debug=True, port= PORT, host= 'localhost')
 
+
+    parser= argparse.ArgumentParser(
+        description='Detect outliers in FreeSurfer statistics')
+
+    parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
+    parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
+    parser.add_argument('-e', '--extent', type=int, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
+                        'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
+
+    # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
+    # outDir = 'C://Users/tashr/Documents/fs-stats/'
+
+    args= parser.parse_args()
+    outDir= abspath(args.output)
+    if not isdir(outDir):
+        makedirs(outDir, exist_ok= True)
+
+    # delete any previous summary
+    for file in glob(outDir+ '/*csv'):
+        remove(file)
+    outliers= pjoin(outDir, 'outliers.csv')
+
+    p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'fs-analyze.py'),
+                       '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
+
+    while not isfile(outliers):
+        p.poll()
+
+    df= pd.read_csv(outliers)
+
+    webbrowser.open_new(f'http://localhost:{PORT}')
+    app.run_server(debug=False, port= PORT, host= 'localhost')
 

@@ -66,7 +66,7 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 
     if method=='snapshot':
         plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color)
-        pyplot.show()
+        pyplot.show(block=False)
         # fsnap, snapshot = mkstemp(suffix='.png', prefix=region+'-')
         # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, output_file= snapshot)
         # close(fsnap)

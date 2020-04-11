@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
 
     parser= argparse.ArgumentParser(
-        description='Detect outliers in FreeSurfer statistics')
+        description='Detect and demonstrate outliers in FreeSurfer statistics')
 
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         remove(file)
     outliers= pjoin(outDir, 'outliers.csv')
 
-    p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'fs-analyze.py'),
+    p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
 
     while not isfile(outliers):

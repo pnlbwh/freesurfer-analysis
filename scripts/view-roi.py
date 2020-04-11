@@ -70,8 +70,7 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
 
     if method=='snapshot':
-        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color,)
-                 # output_file= tmpdir+ f'/{region}.png')
+        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region)
         pyplot.show()
 
 
@@ -82,7 +81,7 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
         #       ii. debug=True, signal from opened pyplot does not mingle with callback signal
         #
         # tmpdir= mkdtemp()
-        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color,
+        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region, 
         #          output_file= tmpdir+ f'/{region}.png')
 
         # app = dash.Dash(__name__, assets_folder=tmpdir, assets_url_path='/')

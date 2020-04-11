@@ -133,7 +133,7 @@ if __name__=='__main__':
     # render_roi(table_header, fsdir, lut_colors, method='snapshot')
 
     parser= argparse.ArgumentParser(
-        description='Render ROI overlaid on the brain, responds to selected cells in zscores table')
+        description='Render ROI overlaid on the brain, responds to selected cells in stats table')
 
     parser.add_argument('-i', '--input', help='freesurfer directory')
     parser.add_argument('-l', '--label', required=True, help='column header in the zscores table')

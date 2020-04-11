@@ -132,12 +132,6 @@ if __name__=='__main__':
     # table_header= 'rh_frontalpole_volume'
     # render_roi(table_header, fsdir, lut_colors, method='snapshot')
 
-    fshome= getenv('FREESURFER_HOME', None)
-    if not fshome:
-        raise EnvironmentError('Please set FREESURFER_HOME and then try again')
-    lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
-    lut_colors= load_lut(lut)
-
     parser= argparse.ArgumentParser(
         description='Render ROI overlaid on the brain, responds to selected cells in zscores table')
 
@@ -147,5 +141,12 @@ if __name__=='__main__':
                         help='snapshot or freeview; method for rendering ROI; default %(default)s')
 
     args= parser.parse_args()
+
+    fshome= getenv('FREESURFER_HOME', None)
+    if not fshome:
+        raise EnvironmentError('Please set FREESURFER_HOME and then try again')
+    lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
+    lut_colors= load_lut(lut)
+    
     render_roi(args.label, abspath(args.input), lut_colors, args.view_type)
 

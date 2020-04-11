@@ -12,7 +12,6 @@ from os.path import isfile, isdir, abspath, dirname, join as pjoin
 from os import makedirs, getenv
 import webbrowser
 from subprocess import check_call
-from view_roi import render_roi, load_lut
 
 app = dash.Dash(__name__)
 
@@ -29,13 +28,6 @@ if __name__ == '__main__':
     df= pd.read_csv(abspath(args.input))
     subjects= df[df.columns[0]].values
     # df = pd.read_csv('C://Users/tashr/Documents/fs-stats-aparc/outliers.csv')
-
-    fshome= getenv('FREESURFER_HOME', None)
-    fshome= 'C://Users/tashr/Documents/'
-    if not fshome:
-        raise EnvironmentError('Please set FREESURFER_HOME and then try again')
-    lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
-    lut_colors= load_lut(lut)
 
     data_condition = [{
         'if': {'row_index': 'odd'},
@@ -109,10 +101,9 @@ if __name__ == '__main__':
 
             # nilearn or freeview rendering
             fsdir= args.template.replace('$', subjects[temp['row']])
-            # fsdir= r'C:\Users\tashr\Documents\freesurfer'
             if isdir(fsdir):
-                render_roi(temp['column_id'], fsdir, lut_colors, view_type)
-
+                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view_roi.py'),
+                                     '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
     app.run_server(debug=True, port= 8030, host= 'localhost')
 

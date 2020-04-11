@@ -110,7 +110,7 @@ def plot_graph(region, NUM_STD=2):
 if __name__ == '__main__':
 
     parser= argparse.ArgumentParser(
-        description='Detect outliers in FreeSurfer statistics', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        description='Detect outliers in FreeSurfer statistics and display them in graphs', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
@@ -165,5 +165,6 @@ if __name__ == '__main__':
         fig, _, _ = plot_graph(region, args.extent)
 
         return fig
+
 
     app.run_server(debug=False, port= 8040, host= 'localhost')

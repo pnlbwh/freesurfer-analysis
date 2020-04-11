@@ -17,7 +17,7 @@ app = dash.Dash(__name__)
 
 if __name__ == '__main__':
 
-    parser= argparse.ArgumentParser(description='Demonstrate outliers in FreeSurfer statistics')
+    parser= argparse.ArgumentParser(description='Demonstrate outliers of FreeSurfer statistics in an interactive table')
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based zscores')
     parser.add_argument('-t', '--template', required=True,
                         help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
@@ -102,8 +102,8 @@ if __name__ == '__main__':
             # nilearn or freeview rendering
             fsdir= args.template.replace('$', subjects[temp['row']])
             if isdir(fsdir):
-                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view_roi.py'),
+                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
                                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
-    app.run_server(debug=True, port= 8030, host= 'localhost')
+    app.run_server(debug=False, port= 8030, host= 'localhost')
 

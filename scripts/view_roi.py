@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 
-from matplotlib import pyplot
 from nilearn.plotting import plot_roi
 from nibabel import Nifti1Image
 from nibabel.freesurfer import load as fsload
 from nibabel.freesurfer import MGHImage
+from matplotlib import pyplot
 from matplotlib.colors import ListedColormap
 from subprocess import check_call
-from os.path import join as pjoin
-from os import remove, close
-from tempfile import mkstemp
+from os.path import join as pjoin, abspath
+from os import remove, close, getenv
+from tempfile import mkstemp, mkdtemp
+from shutil import rmtree
+import dash
+import dash_html_components as html
+import webbrowser
+import argparse
 
 OPACITY = 0.8
 
@@ -63,16 +68,34 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 
     roi= (seg.get_fdata()==label)*label
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
-    MGHImage(roi, affine= seg.affine, header= seg.header).to_filename(roi_mgh)
 
     if method=='snapshot':
-        plot_roi(roi_nifti, bg_img= brain_nifti, draw_cross=False, cmap= color)
-        pyplot.show(block=False)
-        # fsnap, snapshot = mkstemp(suffix='.png', prefix=region+'-')
-        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, output_file= snapshot)
-        # close(fsnap)
-        # remove(snapshot)
+        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color,)
+                 # output_file= tmpdir+ f'/{region}.png')
+        pyplot.show()
+
+
+        # if a separate folder is not used as assets_folder, dash will try loading all its content
+        # so create a tmpdir and save the snapshot there
+        # problem with this approach:
+        #       i. debug=False, no way to stop the server, plot does not refresh with selected cells on the web browser
+        #       ii. debug=True, signal from opened pyplot does not mingle with callback signal
+        #
+        # tmpdir= mkdtemp()
+        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color,
+        #          output_file= tmpdir+ f'/{region}.png')
+
+        # app = dash.Dash(__name__, assets_folder=tmpdir, assets_url_path='/')
+        # app.layout = html.Div([
+        #     html.Img(src=f'{region}.png')
+        # ])
+        # webbrowser.open('http://localhost:8010')
+        # app.run_server(port=8010, host= 'localhost')
+        # rmtree(tmpdir)
+
     elif method=='freeview':
+
+        MGHImage(roi, affine=seg.affine, header=seg.header).to_filename(roi_mgh)
 
         if cortex:
             # show aparc+aseg
@@ -102,14 +125,27 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 if __name__=='__main__':
     # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
     # lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
-    fsdir = '/home/tb571/freesurfer/subjects/434-t1w_mprage-xc'
-    lut = '/home/tb571/freesurfer/FreeSurferColorLUT.txt'
-
-    lut_colors= load_lut(lut)
-    table_header = 'Left-Thalamus-Proper'
+    # lut_colors= load_lut(lut)
+    # table_header = 'Left-Thalamus-Proper'
     # table_header= 'Left-Lateral-Ventricle'
     # table_header = 'lh_transversetemporal_volume'
-    table_header= 'rh_frontalpole_volume'
-    render_roi(table_header, fsdir, lut_colors, method='snapshot')
+    # table_header= 'rh_frontalpole_volume'
+    # render_roi(table_header, fsdir, lut_colors, method='snapshot')
 
+    fshome= getenv('FREESURFER_HOME', None)
+    if not fshome:
+        raise EnvironmentError('Please set FREESURFER_HOME and then try again')
+    lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
+    lut_colors= load_lut(lut)
+
+    parser= argparse.ArgumentParser(
+        description='Render ROI overlaid on the brain, responds to selected cells in zscores table')
+
+    parser.add_argument('-i', '--input', help='freesurfer directory')
+    parser.add_argument('-l', '--label', required=True, help='column header in the zscores table')
+    parser.add_argument('-v', '--view-type', default='snapshot',
+                        help='snapshot or freeview; method for rendering ROI; default %(default)s')
+
+    args= parser.parse_args()
+    render_roi(args.label, abspath(args.input), lut_colors, args.view_type)
 

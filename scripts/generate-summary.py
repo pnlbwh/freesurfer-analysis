@@ -5,16 +5,20 @@ import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 from dash_table import DataTable
+from dash.exceptions import PreventUpdate
 import pandas as pd
 import argparse
 from os.path import isfile, isdir, abspath, dirname, join as pjoin
 from os import makedirs, remove
 import webbrowser
 from glob import glob
-from subprocess import Popen
+from subprocess import Popen, check_call
 
 PORT=8050
-app = dash.Dash(__name__)
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+# app = dash.Dash(__name__)
 
 app.layout = html.Div([
 
@@ -24,11 +28,24 @@ app.layout = html.Div([
                 id='group-by',
                 options=[{'label': i, 'value': i} for i in ['subjects','regions']],
                 value='subjects'
-            )
+            ),
         ],
-        style = {'width': '20%',}),
-        html.Br(),
+        style = {'width': '20%'}),
 
+        html.Div([
+            html.Button(id='show-stats-graphs',
+                        n_clicks_timestamp=0,
+                        children='Show stats graphs',
+                        title='Show region-based outliers in graphs'),
+            html.Button(id='show-stats-table',
+                        n_clicks_timestamp=0,
+                        children='Show stats table ',
+                        title='Show all outliers in table')
+            ],
+            style = {'float': 'right', 'display':'inline-block'},
+            id='main-program'),
+
+        html.Br(),
         DataTable(
             id='summary',
             filter_action='native',
@@ -53,6 +70,27 @@ app.layout = html.Div([
 
 ])
 
+@app.callback(Output('main-program', 'children'),
+              [Input('show-stats-graphs', 'n_clicks_timestamp'),
+               Input('show-stats-table', 'n_clicks_timestamp')])
+def show_stats_table(graphs, table):
+    if int(graphs)>int(table):
+        # analyze-stats program have already been executed in the background
+        # open localhost:8040
+        url= 'http://localhost:8040'
+        print(f'\n\nDisplaying graphs at {url}\n\n')
+        webbrowser.open(url)
+    elif int(table)>int(graphs):
+        # execute show-stats-table program
+        # open localhost:8030
+        Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
+                            '-i', outliers, '-t', args.template]), shell=True)
+        url= 'http://localhost:8030'
+        print(f'\n\nDisplaying table at {url}\n\n')
+        webbrowser.open(url)
+
+
+    raise PreventUpdate
 
 @app.callback([Output('summary', 'data'),
                Output('summary', 'columns')],
@@ -94,10 +132,16 @@ if __name__ == '__main__':
     parser= argparse.ArgumentParser(
         description='Detect and demonstrate outliers in FreeSurfer statistics')
 
-    parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
+    parser.add_argument('-i', '--input', required=False, help='a csv file containing region based statistics')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
     parser.add_argument('-e', '--extent', type=int, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
+    parser.add_argument('-c', '--caselist', required=False,
+                        help='subject ids from the caselist are used in template to obtain valid freesurfer directory')
+    parser.add_argument('-t', '--template', required=False,
+                        help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
+                             '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
+                             'where $ sign is the placeholder for subject id')
 
     # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats/'
@@ -112,6 +156,10 @@ if __name__ == '__main__':
         remove(file)
     outliers= pjoin(outDir, 'outliers.csv')
 
+    # TODO
+    # accept either summary table as args.input
+    # or args.caselist with args.template and then generate args.input
+
     p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
 
@@ -120,6 +168,6 @@ if __name__ == '__main__':
 
     df= pd.read_csv(outliers)
 
-    webbrowser.open_new(f'http://localhost:{PORT}')
+    # webbrowser.open_new(f'http://localhost:{PORT}')
     app.run_server(debug=False, port= PORT, host= 'localhost')
 

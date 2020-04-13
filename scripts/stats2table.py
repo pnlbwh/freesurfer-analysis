@@ -3,7 +3,7 @@
 from plumbum import local
 from tempfile import TemporaryDirectory
 from os.path import isdir, join as pjoin, abspath
-from os import symlink, makedirs
+from os import symlink, makedirs, getenv
 from subprocess import check_output
 from conversion import read_cases
 import argparse
@@ -16,11 +16,14 @@ def stats2table(caselist, template, outDir, measure='volume'):
             if isdir(fsdir):
                 symlink(fsdir, pjoin(tmpdir, c))
 
+        fsbin= getenv('FREESURFER_HOME')+ '/bin'
         for hemi in ['lh', 'rh']:
-            cmd = f'python2 aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d comma -t {outDir}/aparcstats_{hemi}.csv'
+            cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d comma ' \
+                  f'-t {outDir}/aparcstats_{hemi}.csv'
             check_output(cmd, shell=True)
 
-        cmd = f'python2 asegstats2table --subjectsfile={caselist} -m {measure} -d comma -t {outDir}/asegstats.csv'
+        cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d comma ' \
+              f'-t {outDir}/asegstats.csv'
         check_output(cmd, shell=True)
 
 if __name__== '__main__':

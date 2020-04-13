@@ -13,11 +13,14 @@ from os import makedirs, getenv
 import webbrowser
 from subprocess import check_call
 import logging
+
+from ports import table_port
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 log= logging.getLogger('werkzeug')
-log.disabled= True
+log.setLevel(logging.ERROR)
 
 if __name__ == '__main__':
 
@@ -111,5 +114,5 @@ if __name__ == '__main__':
                 check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
                                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
-    app.run_server(debug=False, port= 8030, host= 'localhost')
+    app.run_server(debug=False, port= table_port, host= 'localhost')
 

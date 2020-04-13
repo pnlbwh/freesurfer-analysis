@@ -11,10 +11,15 @@ from os import makedirs
 import pandas as pd
 import numpy as np
 import argparse
+import logging
+
+from ports import graphs_port
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+log= logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 def plot_graph(region, NUM_STD=2):
     '''
@@ -167,4 +172,4 @@ if __name__ == '__main__':
         return fig
 
 
-    app.run_server(debug=False, port= 8040, host= 'localhost')
+    app.run_server(debug=False, port= graphs_port, host= 'localhost')

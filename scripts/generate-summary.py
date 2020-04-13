@@ -14,11 +14,15 @@ import webbrowser
 from glob import glob
 from subprocess import Popen, check_call
 from time import sleep
+import logging
 
-PORT=8050
+from ports import summary_port, graphs_port, table_port
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+log= logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 app.layout = html.Div([
 
@@ -76,19 +80,18 @@ app.layout = html.Div([
 def show_stats_table(graphs, table):
     if int(graphs)>int(table):
         # analyze-stats program have already been executed in the background
-        # open localhost:8040
-        url= 'http://localhost:8040'
+        # open localhost:graphs_port
+        url= f'http://localhost:{graphs_port}'
         print(f'\n\nDisplaying graphs at {url}\n\n')
         webbrowser.open(url)
     elif int(table)>int(graphs):
         # execute show-stats-table program
-        # open localhost:8030
+        # open localhost:table_port
         Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
                             '-i', outliers, '-t', args.template]), shell=True)
-        # FIXME
-        # is another sleep necessary here?
+
         sleep(5)
-        url= 'http://localhost:8030'
+        url= f'http://localhost:{table_port}'
         print(f'\n\nDisplaying table at {url}\n\n')
         webbrowser.open(url)
 
@@ -171,14 +174,14 @@ if __name__ == '__main__':
     p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
 
-    sleep(5)
+    # sleep(5)
     # FIXME
     # poll not working on HPC
-    # while not isfile(outliers):
-    #     p.poll()
+    while not isfile(outliers):
+        p.poll()
 
     df= pd.read_csv(outliers)
 
-    # webbrowser.open_new(f'http://localhost:{PORT}')
-    app.run_server(debug=False, port= PORT, host= 'localhost')
+    # webbrowser.open_new(f'http://localhost:{summary_port}')
+    app.run_server(debug=False, port= summary_port, host= 'localhost')
 

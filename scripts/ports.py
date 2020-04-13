@@ -1,0 +1,3 @@
+summary_port=8050
+graphs_port=8051
+table_port=8052

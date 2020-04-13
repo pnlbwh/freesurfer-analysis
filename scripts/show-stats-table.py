@@ -12,10 +12,12 @@ from os.path import isfile, isdir, abspath, dirname, join as pjoin
 from os import makedirs, getenv
 import webbrowser
 from subprocess import check_call
-
+import logging
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+log= logging.getLogger('werkzeug')
+log.disabled= True
 
 if __name__ == '__main__':
 

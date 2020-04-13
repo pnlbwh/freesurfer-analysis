@@ -85,6 +85,9 @@ def show_stats_table(graphs, table):
         # open localhost:8030
         Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
                             '-i', outliers, '-t', args.template]), shell=True)
+        # FIXME
+        # is another sleep necessary here?
+        sleep(5)
         url= 'http://localhost:8030'
         print(f'\n\nDisplaying table at {url}\n\n')
         webbrowser.open(url)

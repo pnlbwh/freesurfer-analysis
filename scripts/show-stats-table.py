@@ -82,6 +82,7 @@ if __name__ == '__main__':
                 'fontWeight': 'bold'
             },
 
+            tooltip_duration= 'null',
             tooltip_data=[{c:
                 {
                     'type': 'text',

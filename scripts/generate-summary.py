@@ -152,10 +152,13 @@ if __name__ == '__main__':
         makedirs(outDir, exist_ok= True)
 
     # delete any previous summary
-    remove(outDir+'/group-by-subjects.csv')
-    remove(outDir+'/group-by-regions.csv')
     outliers = pjoin(outDir, 'outliers.csv')
-    remove(outliers)
+    try:
+        remove(outDir + '/group-by-subjects.csv')
+        remove(outDir + '/group-by-regions.csv')
+        remove(outliers)
+    except:
+        pass
 
 
     # TODO

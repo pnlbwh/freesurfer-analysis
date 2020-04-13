@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
         DataTable(
             id='table',
-            columns=[{'name': i,
+            columns=[{'name': f'\n{i}',
                       'id': i,
                       'hideable': True,
                       'type': 'numeric',
@@ -74,7 +74,8 @@ if __name__ == '__main__':
             style_data_conditional=data_condition,
             style_cell={
                 'textAlign': 'left',
-                'whiteSpace': 'pre-wrap'
+                'whiteSpace': 'pre-wrap',
+                'minWidth': '100px'
             },
 
             style_header={
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                 'fontWeight': 'bold'
             },
 
-            tooltip_duration= 'null',
+            tooltip_duration= None,
             tooltip_data=[{c:
                 {
                     'type': 'text',

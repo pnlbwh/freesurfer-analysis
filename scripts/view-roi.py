@@ -7,7 +7,7 @@ from nibabel.freesurfer import MGHImage
 from matplotlib import pyplot
 from matplotlib.colors import ListedColormap
 from subprocess import check_call
-from os.path import join as pjoin, abspath
+from os.path import join as pjoin, abspath, isfile
 from os import remove, close, getenv
 from tempfile import mkstemp, mkdtemp
 from shutil import rmtree
@@ -34,6 +34,10 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
 
     # define files according to FreeSurfer structure
     brain_mgh= pjoin(fsdir, 'mri/brain.mgz')
+    if not isfile(brain_mgh):
+        print(brain_mgh, 'does not exist. Provide a valid freesurfer directory')
+        exit()
+
 
     if 'lh' in table_header or 'rh' in table_header:
         hemis, ctx, _ = table_header.split('_')

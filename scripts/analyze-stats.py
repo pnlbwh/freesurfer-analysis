@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
     df = pd.read_csv(abspath(args.input))
     regions = df.columns.values[1:]
-    subjects = df[regions[0]].values
+    subjects = df[df.columns[0]].values
 
     # save all figures
     df_inliers= df.copy()

@@ -13,6 +13,7 @@ from os import makedirs, remove
 import webbrowser
 from glob import glob
 from subprocess import Popen, check_call
+from time import sleep
 
 PORT=8050
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -151,9 +152,11 @@ if __name__ == '__main__':
         makedirs(outDir, exist_ok= True)
 
     # delete any previous summary
-    for file in glob(outDir+ '/*csv'):
-        remove(file)
-    outliers= pjoin(outDir, 'outliers.csv')
+    remove(outDir+'/group-by-subjects.csv')
+    remove(outDir+'/group-by-regions.csv')
+    outliers = pjoin(outDir, 'outliers.csv')
+    remove(outliers)
+
 
     # TODO
     # accept either summary table as args.input
@@ -162,8 +165,11 @@ if __name__ == '__main__':
     p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
 
-    while not isfile(outliers):
-        p.poll()
+    sleep(5)
+    # FIXME
+    # poll not working on HPC
+    # while not isfile(outliers):
+    #     p.poll()
 
     df= pd.read_csv(outliers)
 

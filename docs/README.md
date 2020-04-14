@@ -33,5 +33,9 @@ Traceback (most recent call last):
 OSError: [Errno 98] Address already in use
 ```
 
-To solve the issue, open `scripts/ports.py` and assign another four digit port to the variable reported in the traceback, and try again.
+One way to solve this issue would be to follow 
+https://stackoverflow.com/questions/11583562/how-to-kill-a-process-running-on-particular-port-in-linux .
+However, if you do not have privilege over that port, you might not be able to stop it from listening. 
+
+In that case, open `scripts/ports.py` and assign another four digit port to the variable reported in the traceback, and try again.
 

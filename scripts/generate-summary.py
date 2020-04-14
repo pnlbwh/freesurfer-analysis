@@ -88,7 +88,7 @@ def show_stats_table(graphs, table):
         # execute show-stats-table program
         # open localhost:table_port
         Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
-                            '-i', outliers, '-t', args.template]), shell=True)
+                            '-i', outliers, '-t', args.template, '-e', str(args.extent)]), shell=True)
 
         sleep(5)
         url= f'http://localhost:{table_port}'
@@ -112,7 +112,7 @@ def update_summary(group_by):
                     } for i in dfs.columns]
 
         for i in range(len(df)):
-            outliers=df.columns.values[1:][df.loc[i].values[1:] > 2]
+            outliers=df.columns.values[1:][df.loc[i].values[1:] > args.extent]
             dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
 
     else:
@@ -123,7 +123,7 @@ def update_summary(group_by):
                     } for i in dfs.columns]
 
         for i,region in enumerate(df.columns[1:]):
-            outliers= df[df.columns[0]].values[df[region]>2]
+            outliers= df[df.columns[0]].values[df[region] > args.extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([x for x in outliers])]
 
     summary= f'group-by-{group_by}.csv'
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-i', '--input', required=False, help='a csv file containing region based statistics')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
-    parser.add_argument('-e', '--extent', type=int, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
+    parser.add_argument('-e', '--extent', type=float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
     parser.add_argument('-c', '--caselist', required=False,
                         help='subject ids from the caselist are used in template to obtain valid freesurfer directory')
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
     p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
-    
+
     while not isfile(outliers):
         p.poll()
 

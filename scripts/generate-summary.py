@@ -171,12 +171,10 @@ if __name__ == '__main__':
     # accept either summary table as args.input
     # or args.caselist with args.template and then generate args.input
 
-    p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
-                       '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
-
-    while not isfile(outliers):
-        p.poll()
-
+    Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
+                    '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
+    
+    sleep(60)
     df= pd.read_csv(outliers)
 
     # webbrowser.open_new(f'http://localhost:{summary_port}')

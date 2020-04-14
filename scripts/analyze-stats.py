@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
-    parser.add_argument('-e', '--extent', type= int, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
+    parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
 
     args= parser.parse_args()

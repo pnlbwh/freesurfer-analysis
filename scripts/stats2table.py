@@ -1,30 +1,37 @@
 #!/usr/bin/env python
 
-from plumbum import local
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, mkdtemp
 from os.path import isdir, join as pjoin, abspath
-from os import symlink, makedirs, getenv
-from subprocess import check_output
+from os import symlink, makedirs, environ
+from subprocess import check_call, Popen
 from conversion import read_cases
 import argparse
+from shutil import rmtree
 
 def stats2table(caselist, template, outDir, measure='volume'):
 
-    with TemporaryDirectory() as tmpdir, local.env(SUBJECTS_DIR=tmpdir):
-        for c in read_cases(caselist):
-            fsdir = template.replace('$', c)
-            if isdir(fsdir):
-                symlink(fsdir, pjoin(tmpdir, c))
+    tmpdir= mkdtemp()
+        
+    for c in read_cases(caselist):
+        fsdir = template.replace('$', c)
+        if isdir(fsdir):
+            symlink(fsdir, pjoin(tmpdir, c))
 
-        fsbin= getenv('FREESURFER_HOME')+ '/bin'
-        for hemi in ['lh', 'rh']:
-            cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d comma ' \
-                  f'-t {outDir}/aparcstats_{hemi}.csv'
-            check_output(cmd, shell=True)
+    fsbin= environ['FREESURFER_HOME']+ '/bin'
+    modified_env= environ.copy()
+    modified_env['SUBJECTS_DIR']= tmpdir
+    for hemi in ['lh', 'rh']:
+        cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d comma ' \
+              f'--skip -t {outDir}/aparcstats_{hemi}.csv'
+        check_call(cmd, shell=True, env=modified_env)
 
-        cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d comma ' \
-              f'-t {outDir}/asegstats.csv'
-        check_output(cmd, shell=True)
+
+    cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d comma ' \
+          f'--skip -t {outDir}/asegstats.csv'
+    check_call(cmd, shell=True, env=modified_env)
+    
+    rmtree(tmpdir)
+
 
 if __name__== '__main__':
     parser= argparse.ArgumentParser(
@@ -46,4 +53,6 @@ if __name__== '__main__':
     outDir= abspath(args.output)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
+    
     stats2table(abspath(args.caselist), args.template, outDir, args.measure)
+

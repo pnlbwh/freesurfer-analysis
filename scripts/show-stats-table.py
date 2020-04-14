@@ -30,6 +30,8 @@ if __name__ == '__main__':
                         help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
                              '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
                              'where $ sign is the placeholder for subject id')
+    parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
+                        'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
 
     args= parser.parse_args()
     df= pd.read_csv(abspath(args.input))
@@ -44,7 +46,7 @@ if __name__ == '__main__':
     for d in [{
         'if': {
             'column_id': c,
-            'filter_query': f'{{{c}}} gt 2',
+            'filter_query': f'{{{c}}} gt {args.extent}',
         },
         'backgroundColor': 'red',
         'color': 'black',

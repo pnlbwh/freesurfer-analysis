@@ -124,7 +124,7 @@ def update_summary(group_by):
 
         for i,region in enumerate(df.columns[1:]):
             outliers= df[df.columns[0]].values[df[region] > args.extent]
-            dfs.loc[i] = [region, len(outliers), '\n'.join([x for x in outliers])]
+            dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
 
     summary= f'group-by-{group_by}.csv'
     if not isfile(summary):

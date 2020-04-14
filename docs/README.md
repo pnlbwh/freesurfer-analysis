@@ -37,5 +37,9 @@ One way to solve this issue would be to follow
 https://stackoverflow.com/questions/11583562/how-to-kill-a-process-running-on-particular-port-in-linux .
 However, if you do not have privilege over that port, you might not be able to stop it from listening. 
 
-In that case, open `scripts/ports.py` and assign another four digit port to the variable reported in the traceback, and try again.
+In that case, open `scripts/ports.py` and assign another four digit port to the variable reported in the traceback, and try again:
+
+    summary_port=8050
+    graphs_port=8051
+    table_port=8052
 

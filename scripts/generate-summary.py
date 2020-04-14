@@ -173,10 +173,7 @@ if __name__ == '__main__':
 
     p= Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                        '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
-
-    # sleep(5)
-    # FIXME
-    # poll not working on HPC
+    
     while not isfile(outliers):
         p.poll()
 

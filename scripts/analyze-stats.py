@@ -117,7 +117,9 @@ if __name__ == '__main__':
     parser= argparse.ArgumentParser(
         description='Detect outliers in FreeSurfer statistics and display them in graphs')
 
-    parser.add_argument('-i', '--input', required=True, help='a csv file containing region based statistics')
+    parser.add_argument('-i', '--input', required=True, help='a csv/tsv file containing region based statistics')
+    parser.add_argument('-d', '--delimiter', default='comma', help='delimiter used between measures in the --input '
+                                                                   '{comma,tab,space,semicolon}, default: %(default)s')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
     parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
@@ -131,7 +133,12 @@ if __name__ == '__main__':
     # df = pd.read_csv('C://Users/tashr/Documents/aparcstats_lh.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats-aparc/'
 
-    df = pd.read_csv(abspath(args.input))
+    delimiter_dict={'comma':',',
+                    'tab':'\t',
+                    'semicolon':';',
+                    'space':' '}
+
+    df = pd.read_csv(abspath(args.input),sep=delimiter_dict[args.delimiter])
     regions = df.columns.values[1:]
     subjects = df[df.columns[0]].values
 

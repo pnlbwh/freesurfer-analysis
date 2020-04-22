@@ -26,10 +26,11 @@ if __name__ == '__main__':
 
     parser= argparse.ArgumentParser(description='Demonstrate outliers of FreeSurfer statistics in an interactive table')
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based zscores')
-    parser.add_argument('-t', '--template', required=True,
+    parser.add_argument('-t', '--template',
                         help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
                              '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
-                             'where $ sign is the placeholder for subject id')
+                             'where $ sign is the placeholder for subject id '
+                             'ROI rendering is disabled if not provided')
     parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
 
@@ -110,6 +111,8 @@ if __name__ == '__main__':
             temp = selected_cells[0]
             print(temp)
 
+            if not args.template:
+                return
             # nilearn or freeview rendering
             fsdir= args.template.replace('$', str(subjects[temp['row']]))
             if isdir(fsdir):

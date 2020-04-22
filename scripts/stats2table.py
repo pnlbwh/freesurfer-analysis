@@ -8,7 +8,7 @@ from conversion import read_cases
 import argparse
 from shutil import rmtree
 
-def stats2table(caselist, template, outDir, measure='volume'):
+def stats2table(caselist, template, outDir, measure='volume', delimiter='comma'):
 
     tmpdir= mkdtemp()
         
@@ -21,12 +21,12 @@ def stats2table(caselist, template, outDir, measure='volume'):
     modified_env= environ.copy()
     modified_env['SUBJECTS_DIR']= tmpdir
     for hemi in ['lh', 'rh']:
-        cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d comma ' \
+        cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d {delimiter} ' \
               f'--skip -t {outDir}/aparcstats_{hemi}.csv'
         check_call(cmd, shell=True, env=modified_env)
 
 
-    cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d comma ' \
+    cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d {delimiter} ' \
           f'--skip -t {outDir}/asegstats.csv'
     check_call(cmd, shell=True, env=modified_env)
     
@@ -44,6 +44,8 @@ if __name__== '__main__':
                              '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
                              'where $ sign is the placeholder for subject id')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
+    parser.add_argument('-d', '--delimiter', default='comma', help='delimiter to use between measures in the output table '
+                                                                   '{comma,tab,space,semicolon}, default: %(default)s')
 
     parser.add_argument('-m', '--measure', default='volume',
                         help='measure extracted from stats/[aseg/aparc].stats files, default: %(default)s. '
@@ -54,5 +56,5 @@ if __name__== '__main__':
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
     
-    stats2table(abspath(args.caselist), args.template, outDir, args.measure)
+    stats2table(abspath(args.caselist), args.template, outDir, args.measure, args.delimiter)
 

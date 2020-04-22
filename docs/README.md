@@ -43,3 +43,18 @@ In that case, open `scripts/ports.py` and assign another four digit port to the 
     graphs_port=8051
     table_port=8052
 
+
+* Provide -d
+
+```bash
+Traceback (most recent call last):
+  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\analyze-stats.py", line 162, in <module>
+    value=regions[0]
+IndexError: index 0 is out of bounds for axis 0 with size 0
+Traceback (most recent call last):
+  File ".\generate-summary.py", line 176, in <module>
+    sleep(60)
+```
+
+The program parses csv files (comma separated) by default. 
+If you provide a tsv file (tab separated) as input, please also provide `-d tab`.

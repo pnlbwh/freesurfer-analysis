@@ -34,7 +34,7 @@ def plot_graph(region, NUM_STD=2):
     inliers = np.array([True if y <= val_mean + NUM_STD* val_std and y >= val_mean - NUM_STD* val_std
                         else False for y in df[region].values])
 
-    zscores= np.array([round((y-val_mean)/val_std,4) if y else 0 for y in df[region].values])
+    zscores= np.array([round((y-val_mean)/val_std,4) if val_std else 0 for y in df[region].values])
 
     serial = np.arange(L)
 

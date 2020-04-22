@@ -88,7 +88,9 @@ def show_stats_table(graphs, table):
         # execute show-stats-table program
         # open localhost:table_port
         Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
-                            '-i', outliers, '-t', args.template, '-e', str(args.extent)]), shell=True)
+                        '-i', outliers,
+                        f'-t {args.template}' if args.template else '',
+                        '-e', str(args.extent)]), shell=True)
 
         sleep(5)
         url= f'http://localhost:{table_port}'
@@ -139,15 +141,16 @@ if __name__ == '__main__':
         description='Detect and demonstrate outliers in FreeSurfer statistics')
 
     parser.add_argument('-i', '--input', required=False, help='a csv file containing region based statistics')
+    parser.add_argument('-d', '--delimiter', default='comma', help='delimiter used between measures in the --input '
+                                                                   '{comma,tab,space,semicolon}, default: %(default)s')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
     parser.add_argument('-e', '--extent', type=float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
-    parser.add_argument('-c', '--caselist', required=False,
-                        help='subject ids from the caselist are used in template to obtain valid freesurfer directory')
     parser.add_argument('-t', '--template', required=False,
                         help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
                              '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
-                             'where $ sign is the placeholder for subject id')
+                             'where $ sign is the placeholder for subject id '
+                             'ROI rendering is disabled if not provided')
 
     # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats/'
@@ -167,12 +170,8 @@ if __name__ == '__main__':
         pass
 
 
-    # TODO
-    # accept either summary table as args.input
-    # or args.caselist with args.template and then generate args.input
-
     Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
-                    '-i', abspath(args.input), '-o', outDir, '-e', str(args.extent)]), shell=True)
+                    '-i', abspath(args.input), '-d', args.delimiter, '-o', outDir, '-e', str(args.extent)]), shell=True)
     
     sleep(60)
     df= pd.read_csv(outliers)

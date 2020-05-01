@@ -31,8 +31,9 @@ def plot_graph(region, NUM_STD=2):
     L = len(subjects)
     val_mean = df[region].values.mean()
     val_std = df[region].values.std()
-    inliers = np.array([True if y <= val_mean + NUM_STD* val_std and y >= val_mean - NUM_STD* val_std
-                        else False for y in df[region].values])
+    # we need val_mean and val_std anyway so no using scipy.stats.zscore function
+    zscores = np.array([round((y - val_mean) / val_std, 4) if val_std else 0 for y in df[region].values])
+    inliers = abs(zscores) <= NUM_STD
 
     zscores= np.array([round((y-val_mean)/val_std,4) if val_std else 0 for y in df[region].values])
 
@@ -44,7 +45,7 @@ def plot_graph(region, NUM_STD=2):
             dict(
                 x=serial[inliers],
                 y=df[region].values[inliers],
-                text=[f'Subject: {id}' for id in subjects[inliers]],
+                text=[f'Sub: {id}, zscore: {z}' for id,z in zip(subjects[inliers],zscores[inliers])],
                 mode='markers',
                 name='inliers',
                 marker={
@@ -57,7 +58,7 @@ def plot_graph(region, NUM_STD=2):
             dict(
                 x=serial[~inliers],
                 y=df[region].values[~inliers],
-                text=[f'Subject: {id}' for id in subjects[~inliers]],
+                text=[f'Sub: {id}, zscore: {z}' for id,z in zip(subjects[~inliers],zscores[~inliers])],
                 mode='markers',
                 name='outliers',
                 marker={
@@ -142,7 +143,7 @@ if __name__ == '__main__':
     regions = df.columns.values[1:]
     subjects = df[df.columns[0]].values
 
-    # save all figures
+    # generate all figures
     df_inliers= df.copy()
     for column_name in regions:
         print(column_name)

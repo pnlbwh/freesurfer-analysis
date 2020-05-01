@@ -114,7 +114,7 @@ def update_summary(group_by):
                     } for i in dfs.columns]
 
         for i in range(len(df)):
-            outliers=df.columns.values[1:][df.loc[i].values[1:] > args.extent]
+            outliers=df.columns.values[1:][abs(df.loc[i].values[1:]) > args.extent]
             dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
 
     else:
@@ -125,7 +125,7 @@ def update_summary(group_by):
                     } for i in dfs.columns]
 
         for i,region in enumerate(df.columns[1:]):
-            outliers= df[df.columns[0]].values[df[region] > args.extent]
+            outliers= df[df.columns[0]].values[abs(df[region]) > args.extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
 
     summary= f'group-by-{group_by}.csv'

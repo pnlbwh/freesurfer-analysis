@@ -13,6 +13,7 @@ import numpy as np
 import argparse
 import logging
 
+from util import delimiter_dict
 from ports import graphs_port
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -133,11 +134,6 @@ if __name__ == '__main__':
     # df = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
     # df = pd.read_csv('C://Users/tashr/Documents/aparcstats_lh.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats-aparc/'
-
-    delimiter_dict={'comma':',',
-                    'tab':'\t',
-                    'semicolon':';',
-                    'space':' '}
 
     df = pd.read_csv(abspath(args.input),sep=delimiter_dict[args.delimiter])
     regions = df.columns.values[1:]

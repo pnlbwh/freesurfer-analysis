@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
 import argparse
-from os.path import isfile, isdir, abspath, dirname, join as pjoin
+from os.path import isfile, isdir, abspath, dirname, basename, join as pjoin, splitext
 from os import makedirs, remove
 import pandas as pd
 import numpy as np
+from util import delimiter_dict
 
 
 if __name__ == '__main__':
 
-    parser= argparse.ArgumentParser(description='Detect and demonstrate outliers in FreeSurfer statistics',
+    parser= argparse.ArgumentParser(description='Combine demographic info and region based statistics in one csv file',
                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-i', '--input', required=True,
@@ -31,16 +32,14 @@ if __name__ == '__main__':
                              'race==\'hispanic\' or (age>40 and age<50)\n'
                              'checkin_bin==3')
 
-    # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
-    # outDir = 'C://Users/tashr/Documents/fs-stats/'
 
     args= parser.parse_args()
     outDir= abspath(args.output)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
-    df= pd.read_csv(abspath(args.input))
-    df_demograph= pd.read_csv(abspath(args.participants))
+    df= pd.read_csv(abspath(args.input), sep=delimiter_dict[args.delimiter])
+    df_demograph= pd.read_csv(abspath(args.participants), sep=delimiter_dict[args.delimiter])
     dfcomb= pd.DataFrame(columns=df.columns)
 
     ids= df_demograph.iloc[:,0].values
@@ -56,9 +55,10 @@ if __name__ == '__main__':
         temp= df_demograph[attr]
         dfcomb[attr]= temp.astype(temp.dtype)
 
-    dfcomb.to_csv(pjoin(outDir, 'combined.csv'), index=False)
+    prefix= splitext(basename(args.input))[0]
+    dfcomb.to_csv(pjoin(outDir, prefix+'_combined.csv'), index=False)
 
 
     # filter the controls
     dfhealthy= dfcomb.query(args.control)
-    dfhealthy.to_csv(pjoin(outDir, 'control.csv'), index=False)
+    dfhealthy.to_csv(pjoin(outDir, prefix+'_control.csv'), index=False)

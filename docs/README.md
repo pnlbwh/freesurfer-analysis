@@ -56,6 +56,21 @@ python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs
 > python scripts\stats2table.py -c path\to\caselist.txt -t path\to\sub-$\anat\freesurfer -o \tmp\fs-stats
 
 
+# Effect of demographics
+
+* combine demography
+
+> python scripts\combine_demography.py -i asegstats.csv -o . -p participants.csv -c "checkin_bin==3"
+
+* fit statsmodel
+
+> python scripts\correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age -p participants.csv -o .
+
+* view summary
+
+> python scripts\generate-summary.py -i asegstats_residuals.csv -o .
+
+
 # Troubleshooting
 
 * `Address already in use`: The error implies that the port mentioned in 

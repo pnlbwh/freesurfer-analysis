@@ -121,6 +121,13 @@ def plot_graph(region, NUM_STD=2):
 
     return (fig, inliers, zscores)
 
+def calc_line(exog, intercept, slope):
+
+    xline = [exog[:, 1].min(), exog[:, 1].max()]
+    yline = [xline[0] * slope + intercept, xline[1] * slope + intercept]
+
+    return xline, yline
+
 def display_model(region):
 
     res = sm.load_pickle(pjoin(outDir, f'.{region}.pkl'))
@@ -135,9 +142,7 @@ def display_model(region):
 
     line_fit = sm.OLS(Y, sm.add_constant(Yhat, prepend=True)).fit()
 
-    intercept, slope = line_fit.params
-    xline = [line_fit.model.exog[:, 1].min(), line_fit.model.exog[:, 1].max()]
-    yline = [xline[0] * slope + intercept, xline[1] * slope + intercept]
+
 
     # endog vs exog
     fig.add_trace(go.Scatter(x=X, y=Y,
@@ -148,9 +153,18 @@ def display_model(region):
     # Observed vs Fitted with line
     fig.add_trace(go.Scatter(x=Yhat, y=Y,
                              mode='markers'), row=2, col=1)
+
+
+    # fit three lines: mle, conf_int[0] and conf_int[1]
+    xline, yline= calc_line(res.model.exog, res.params[0], res.params[1])
     fig.add_trace(go.Scatter(x=xline, y=yline,
                              mode='lines',
-                             line={'color': 'black', 'width': 2}), row=2, col=1)
+                             line={'color': 'black', 'width': 2}), row=1, col=1)
+    for _, params in res.conf_int().iteritems():
+        intercept, slope= params
+        xline, yline= calc_line(res.model.exog, intercept, slope)
+        fig.add_trace(go.Scatter(x=xline, y=yline,
+                                 mode='lines'))
     fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Observed values'})
 
 

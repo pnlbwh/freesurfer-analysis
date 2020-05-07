@@ -133,22 +133,37 @@ def display_model(region):
     Y= res.model.endog
     Yhat= res.mu
 
+    line_fit = sm.OLS(Y, sm.add_constant(Yhat, prepend=True)).fit()
+
+    intercept, slope = line_fit.params
+    xline = [line_fit.model.exog[:, 1].min(), line_fit.model.exog[:, 1].max()]
+    yline = [xline[0] * slope + intercept, xline[1] * slope + intercept]
+
+    # endog vs exog
     fig.add_trace(go.Scatter(x=X, y=Y,
                              mode='markers'), row=1, col=1)
+    fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
 
+
+    # Observed vs Fitted with line
     fig.add_trace(go.Scatter(x=Yhat, y=Y,
                              mode='markers'), row=2, col=1)
-    fig.update_layout(xaxis= {'title':res.model.exog_names[-1]}, yaxis= {'title': 'volume'})
-
-    fig.add_trace(go.Scatter(x=Yhat, y=res.resid_deviance,
-                             mode='markers'), row=2, col=2)
+    fig.add_trace(go.Scatter(x=xline, y=yline,
+                             mode='lines',
+                             line={'color': 'black', 'width': 2}), row=2, col=1)
     fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Observed values'})
 
+
+    # Residuals vs Fitted
+    fig.add_trace(go.Scatter(x=Yhat, y=res.resid_deviance,
+                             mode='markers'), row=2, col=2)
     fig.add_trace(go.Scatter(x=[Yhat.min(), Yhat.max()], y=[0,0],
                              mode='lines',
                              line={'color': 'black', 'width': 2}), row=2, col=2)
     fig.update_layout(xaxis4={'title': 'Fitted values'}, yaxis4={'title': 'Residuals'})
 
+
+    # of the whole subplot
     fig.update_layout(title='Generalized linear model fitting on control group:')
     fig.update_layout(height=1000)
 

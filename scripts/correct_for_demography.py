@@ -62,6 +62,7 @@ if __name__ == '__main__':
 
         if dfhealthy[region].values.any():
             res = smf.glm(formula=formula, data=dfhealthy[endog_exog], family=sm.families.Gaussian()).fit()
+            res.save(pjoin(outDir, f'.{region}.pkl'))
         else:
             continue
 

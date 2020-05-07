@@ -4,6 +4,8 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+from plotly.subplots import make_subplots
+import statsmodels.api as sm
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin
 from os import makedirs
@@ -119,6 +121,38 @@ def plot_graph(region, NUM_STD=2):
 
     return (fig, inliers, zscores)
 
+def display_model(region):
+
+    res = sm.load_pickle(pjoin(outDir, f'.{region}.pkl'))
+
+    fig = make_subplots(
+        rows=2, cols=2,
+        vertical_spacing=0.3
+    )
+
+    X= res.model.exog[:,-1]
+    Y= res.model.endog
+    Yhat= res.mu
+
+    fig.add_trace(go.Scatter(x=X, y=Y,
+                             mode='markers'), row=1, col=1)
+
+    fig.add_trace(go.Scatter(x=Yhat, y=Y,
+                             mode='markers'), row=2, col=1)
+    fig.update_layout(xaxis= {'title':res.model.exog_names[-1]}, yaxis= {'title': 'volume'})
+
+    fig.add_trace(go.Scatter(x=Yhat, y=res.resid_deviance,
+                             mode='markers'), row=2, col=2)
+    fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Observed values'})
+
+    fig.add_trace(go.Scatter(x=[Yhat.min(), Yhat.max()], y=[0,0],
+                             mode='lines',
+                             line={'color': 'black', 'width': 2}), row=2, col=2)
+    fig.update_layout(xaxis4={'title': 'Fitted values'}, yaxis4={'title': 'Residuals'})
+
+    fig.update_layout(title='Generalized linear model fitting on control group:')
+
+    return fig
 
 if __name__ == '__main__':
 
@@ -153,6 +187,8 @@ if __name__ == '__main__':
 
     # generate all figures
     df_inliers= df.copy()
+    # the below overwrite is for debugging only
+    regions=['Left-Lateral-Ventricle', 'Brain-Stem', 'Right-Amygdala']
     for column_name in regions:
         print(column_name)
         _, inliers, zscores= plot_graph(column_name, args.extent)
@@ -174,18 +210,21 @@ if __name__ == '__main__':
             style={'width': '48%', 'display': 'inline-block'}),
 
         dcc.Graph(id='stat-graph'),
-
+        dcc.Graph(id='model-graph'),
     ])
 
 
     @app.callback(
-         Output('stat-graph', 'figure'),
+         # return for stat-graph-model
+        [Output('stat-graph', 'figure'),
+         Output('model-graph', 'figure')],
         [Input('region', 'value')])
     def update_graph(region):
 
         fig, _, _ = plot_graph(region, args.extent)
+        model= display_model(region)
+        # also return png figure object
+        return (fig,model)
 
-        return fig
 
-
-    app.run_server(debug=False, port= compare_port, host= 'localhost')
+    app.run_server(debug=True, port= compare_port, host= 'localhost')

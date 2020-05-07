@@ -109,9 +109,9 @@ def plot_graph(region, NUM_STD=2):
             yaxis={
                 'title': region
             },
-            margin={'l': 50, 'b': 40, 't': 30, 'r': 0},
+            margin={'l': 50, 'b': 100, 't': 30, 'r': 0},
             hovermode='closest',
-            height=400
+            height=500
         )
     })
 
@@ -127,7 +127,6 @@ def display_model(region):
 
     fig = make_subplots(
         rows=2, cols=2,
-        vertical_spacing=0.3
     )
 
     X= res.model.exog[:,-1]
@@ -151,6 +150,7 @@ def display_model(region):
     fig.update_layout(xaxis4={'title': 'Fitted values'}, yaxis4={'title': 'Residuals'})
 
     fig.update_layout(title='Generalized linear model fitting on control group:')
+    fig.update_layout(height=1000)
 
     return fig
 

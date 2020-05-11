@@ -72,7 +72,7 @@ python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs
 
 * compare uncorrected and corrected outliers
 
-> python compare_correction.py -i .\asegstats_combined.csv -c .\asegstats_age_residuals.csv -p .\participants.csv -o .
+> python compare_correction.py -i asegstats_combined.csv -c asegstats_age_residuals.csv -p participants.csv -o .
 
 # Troubleshooting
 

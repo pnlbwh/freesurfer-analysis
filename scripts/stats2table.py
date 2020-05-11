@@ -35,7 +35,7 @@ def stats2table(caselist, template, outDir, measure='volume', delimiter='comma')
 
 if __name__== '__main__':
     parser= argparse.ArgumentParser(
-        description='Make symbolic links of freesurfer directories in one place and generate [aseg/aparc]stats2table')
+        description='Make symbolic links of freesurfer directories in one place and generate {aseg,aparc}stats2table')
 
     parser.add_argument('-c', '--caselist', required=False,
                         help='subject ids from the caselist are used in template to obtain valid freesurfer directory')
@@ -48,7 +48,7 @@ if __name__== '__main__':
                                                                    '{comma,tab,space,semicolon}, default: %(default)s')
 
     parser.add_argument('-m', '--measure', default='volume',
-                        help='measure extracted from stats/[aseg/aparc].stats files, default: %(default)s. '
+                        help='measure extracted from stats/{asegstats,aparcstats_{lh,rh}}.tsv files, default: %(default)s. '
                              'See `asegstats2table -h` and `aparctats2table -h` for supported measures')
 
     args= parser.parse_args()

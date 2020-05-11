@@ -7,6 +7,10 @@ from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 import statsmodels.api as sm
 import plotly.graph_objects as go
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+from statsmodels.graphics.gofplots import qqplot
 from os.path import isfile, isdir, abspath, join as pjoin
 from os import makedirs
 
@@ -143,38 +147,50 @@ def display_model(region):
     line_fit = sm.OLS(Y, sm.add_constant(Yhat, prepend=True)).fit()
 
 
-
     # endog vs exog
-    fig.add_trace(go.Scatter(x=X, y=Y,
-                             mode='markers'), row=1, col=1)
-    fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
+    if len(res.params)<=2:
+        fig.add_trace(go.Scatter(x=X, y=Y,
+                                 mode='markers'), row=1, col=1)
+        fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
+
 
 
     # Observed vs Fitted with line
     fig.add_trace(go.Scatter(x=Yhat, y=Y,
-                             mode='markers'), row=2, col=1)
+                             mode='markers'), row=1, col=2)
 
-
-    # fit three lines: mle, conf_int[0] and conf_int[1]
-    xline, yline= calc_line(res.model.exog, res.params[0], res.params[1])
+    xline, yline= calc_line(line_fit.model.exog, line_fit.params[0], line_fit.params[1])
     fig.add_trace(go.Scatter(x=xline, y=yline,
                              mode='lines',
-                             line={'color': 'black', 'width': 2}), row=1, col=1)
-    for _, params in res.conf_int().iteritems():
-        intercept, slope= params
-        xline, yline= calc_line(res.model.exog, intercept, slope)
-        fig.add_trace(go.Scatter(x=xline, y=yline,
-                                 mode='lines'))
-    fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Observed values'})
+                             line={'color': 'black', 'width': 2}), row=1, col=2)
+    fig.update_layout(xaxis2={'title': 'Fitted values'}, yaxis2={'title': 'Observed values'})
+
 
 
     # Residuals vs Fitted
-    fig.add_trace(go.Scatter(x=Yhat, y=res.resid_deviance,
-                             mode='markers'), row=2, col=2)
+    fig.add_trace(go.Scatter(x=Yhat, y=res.resid_pearson,
+                             mode='markers'), row=2, col=1)
     fig.add_trace(go.Scatter(x=[Yhat.min(), Yhat.max()], y=[0,0],
                              mode='lines',
-                             line={'color': 'black', 'width': 2}), row=2, col=2)
-    fig.update_layout(xaxis4={'title': 'Fitted values'}, yaxis4={'title': 'Residuals'})
+                             line={'color': 'black', 'width': 2}), row=2, col=1)
+    fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Pearson residuals'})
+
+
+
+    # Observed quantiles vs theoretical quantiles
+    # _, ax= plt.subplots()
+    mpl_fig= plt.figure()
+    ax= mpl_fig.gca()
+    qqplot(res.resid_deviance, line='r', ax= ax)
+
+    fig.add_trace(go.Scatter(x=ax.lines[0].get_xdata(), y=ax.lines[0].get_ydata(),
+                             mode='markers', name= ''), row=2, col=2)
+    fig.add_trace(go.Scatter(x=ax.lines[1].get_xdata(), y=ax.lines[1].get_ydata(),
+                             mode='lines',
+                             line={'color': 'black', 'width': 2},
+                             name= 'theoretical line'), row=2, col=2)
+    fig.update_layout(xaxis4={'title': 'Quantiles of N(0,1)'}, yaxis4={'title': 'Deviance residual quantiles'})
+
 
 
     # of the whole subplot

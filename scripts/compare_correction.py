@@ -23,6 +23,8 @@ import logging
 from util import delimiter_dict
 from ports import compare_port
 
+NUM_POINTS=20
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -127,8 +129,8 @@ def plot_graph(region, NUM_STD=2):
 
 def calc_line(exog, intercept, slope):
 
-    xline = [exog[:, 1].min(), exog[:, 1].max()]
-    yline = [xline[0] * slope + intercept, xline[1] * slope + intercept]
+    xline = np.linspace(exog[:, 1].min(), exog[:, 1].max(), NUM_POINTS)
+    yline = [x * slope + intercept for x in xline]
 
     return xline, yline
 
@@ -161,8 +163,8 @@ def display_model(region):
 
     xline, yline= calc_line(line_fit.model.exog, line_fit.params[0], line_fit.params[1])
     fig.add_trace(go.Scatter(x=xline, y=yline,
-                             mode='lines',
-                             line={'color': 'black', 'width': 2}), row=1, col=2)
+                             mode='lines', name='OLS line',
+                             line={'width': 3}), row=1, col=2)
     fig.update_layout(xaxis2={'title': 'Fitted values'}, yaxis2={'title': 'Observed values'})
 
 
@@ -170,9 +172,9 @@ def display_model(region):
     # Residuals vs Fitted
     fig.add_trace(go.Scatter(x=Yhat, y=res.resid_pearson,
                              mode='markers'), row=2, col=1)
-    fig.add_trace(go.Scatter(x=[Yhat.min(), Yhat.max()], y=[0,0],
-                             mode='lines',
-                             line={'color': 'black', 'width': 2}), row=2, col=1)
+    fig.add_trace(go.Scatter(x=np.linspace(Yhat.min(), Yhat.max(), NUM_POINTS), y=[0]*NUM_POINTS,
+                             mode='lines', name='zero residual',
+                             line={'width': 3}), row=2, col=1)
     fig.update_layout(xaxis3={'title': 'Fitted values'}, yaxis3={'title': 'Pearson residuals'})
 
 
@@ -184,11 +186,10 @@ def display_model(region):
     qqplot(res.resid_deviance, line='r', ax= ax)
 
     fig.add_trace(go.Scatter(x=ax.lines[0].get_xdata(), y=ax.lines[0].get_ydata(),
-                             mode='markers', name= ''), row=2, col=2)
+                             mode='markers'), row=2, col=2)
     fig.add_trace(go.Scatter(x=ax.lines[1].get_xdata(), y=ax.lines[1].get_ydata(),
-                             mode='lines',
-                             line={'color': 'black', 'width': 2},
-                             name= 'theoretical line'), row=2, col=2)
+                             mode='lines', name='theoretical line',
+                             line={'width': 3}), row=2, col=2)
     fig.update_layout(xaxis4={'title': 'Quantiles of N(0,1)'}, yaxis4={'title': 'Deviance residual quantiles'})
 
 

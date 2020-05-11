@@ -204,7 +204,7 @@ def display_model(region):
     fig.update_layout(title='Generalized linear model fitting on control group:')
     fig.update_layout(height=1000)
 
-    return fig
+    return (fig, res.summary())
 
 if __name__ == '__main__':
 
@@ -263,20 +263,24 @@ if __name__ == '__main__':
 
         dcc.Graph(id='stat-graph'),
         dcc.Graph(id='model-graph'),
+        html.Br(),
+        'Model summary: ',
+        dcc.Markdown(id='model-summary')
     ])
 
 
     @app.callback(
-         # return for stat-graph-model
         [Output('stat-graph', 'figure'),
-         Output('model-graph', 'figure')],
+         Output('model-graph', 'figure'),
+         Output('model-summary','children')],
         [Input('region', 'value')])
     def update_graph(region):
 
         fig, _, _ = plot_graph(region, args.extent)
-        model= display_model(region)
-        # also return png figure object
-        return (fig,model)
+        model, summary= display_model(region)
+
+
+        return (fig,model, f"```<br>{summary}")
 
 
     app.run_server(debug=True, port= compare_port, host= 'localhost')

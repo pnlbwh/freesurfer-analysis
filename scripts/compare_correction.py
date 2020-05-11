@@ -180,16 +180,22 @@ def display_model(region):
 
 
     # Observed quantiles vs theoretical quantiles
-    # _, ax= plt.subplots()
+    # Q-Q plot
+    # https://en.wikipedia.org/wiki/Normal_probability_plot#Definition
     mpl_fig= plt.figure()
     ax= mpl_fig.gca()
     qqplot(res.resid_deviance, line='r', ax= ax)
+    tempy= ax.lines[1].get_ydata()
+    tempx= ax.lines[1].get_xdata()
+    ols_slope= round((tempy[-1]-tempy[0]) / (tempx[-1]- tempx[0]),3)
+    expected_slope= round(res.resid_deviance.std(),3)
 
     fig.add_trace(go.Scatter(x=ax.lines[0].get_xdata(), y=ax.lines[0].get_ydata(),
                              mode='markers'), row=2, col=2)
     fig.add_trace(go.Scatter(x=ax.lines[1].get_xdata(), y=ax.lines[1].get_ydata(),
-                             mode='lines', name='theoretical line',
-                             line={'width': 3}), row=2, col=2)
+                             mode='lines', name='OLS line',
+                             line={'width': 3},
+                             text=f'Slope={ols_slope}<br>Ideal slope={expected_slope}'), row=2, col=2)
     fig.update_layout(xaxis4={'title': 'Quantiles of N(0,1)'}, yaxis4={'title': 'Deviance residual quantiles'})
 
 

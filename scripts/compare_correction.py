@@ -7,6 +7,7 @@ from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 import statsmodels.api as sm
 import plotly.graph_objects as go
+import plotly.express as px
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -15,7 +16,7 @@ from os.path import isfile, isdir, abspath, join as pjoin
 from os import makedirs
 
 import pandas as pd
-from scipy.stats import zscore
+from scipy.stats import zscore, chi2
 import numpy as np
 import argparse
 import logging
@@ -156,7 +157,6 @@ def display_model(region):
         fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
 
 
-
     # Observed vs Fitted with line
     fig.add_trace(go.Scatter(x=Yhat, y=Y,
                              mode='markers'), row=1, col=2)
@@ -204,7 +204,23 @@ def display_model(region):
     fig.update_layout(title='Generalized linear model fitting on control group:')
     fig.update_layout(height=1000)
 
-    return (fig, res.summary())
+    # https://github.com/statsmodels/statsmodels/blob/160911ace8119eefe0e66998ea56d24e590fc415/statsmodels/base/model.py#L2457
+    llr= -2*(res.llnull - res.llf)
+    llr_pvalue= chi2.sf(llr, res.df_model)
+    # https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-what-are-pseudo-r-squareds/
+    prsquared= 1- res.llf/res.llnull
+
+    desc= str(res.summary())+'\n' + f'`llr_pvalue`: {llr_pvalue}'+'\n' + f'`Psuedo R^2`: {prsquared}' + '\n'
+    # interpretation
+    desc += '''
+Direction for interpreting model (there is no single right answer)
+* The lower the `llr_pvalue`, the better is the model fitting
+* The higher the `Psuedo R^2`, the better is the model fitting
+* The lower the pvalue of a particular coefficient, the more significant it is
+* The more compact a confidence interval [0.025 0.975] for a particular coefficient, the better is the estimation 
+'''
+
+    return (fig, desc)
 
 if __name__ == '__main__':
 
@@ -240,7 +256,7 @@ if __name__ == '__main__':
     # generate all figures
     df_inliers= df.copy()
     # the below overwrite is for debugging only
-    regions=['Left-Lateral-Ventricle', 'Brain-Stem', 'Right-Amygdala']
+    # regions=['CSF', 'Brain-Stem', 'Left-Accumbens-area']
     for column_name in regions:
         print(column_name)
         _, inliers, zscores= plot_graph(column_name, args.extent)
@@ -280,7 +296,7 @@ if __name__ == '__main__':
         model, summary= display_model(region)
 
 
-        return (fig,model, f"```<br>{summary}")
+        return (fig,model, f"```{summary}")
 
 
     app.run_server(debug=True, port= compare_port, host= 'localhost')

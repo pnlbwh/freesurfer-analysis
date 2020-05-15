@@ -7,7 +7,6 @@ from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 import statsmodels.api as sm
 import plotly.graph_objects as go
-import plotly.express as px
 import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
@@ -52,7 +51,7 @@ def plot_graph(region, NUM_STD=2):
 
     # modify inliers according to df_resid
     if df[region].any():
-        inliers_corrected= zscore(df_resid[region].values) <= NUM_STD
+        inliers_corrected= abs(zscore(df_resid[region].values)) <= NUM_STD
         inliers= np.logical_and(inliers, inliers_corrected)
 
     fig = go.Figure({
@@ -137,6 +136,8 @@ def calc_line(exog, intercept, slope):
 
 def display_model(region):
 
+    print(f'\nDisplaying GLM fitting on {region}')
+
     res = sm.load_pickle(pjoin(outDir, f'.{region}.pkl'))
 
     fig = make_subplots(
@@ -155,6 +156,7 @@ def display_model(region):
         fig.add_trace(go.Scatter(x=X, y=Y,
                                  mode='markers'), row=1, col=1)
         fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
+
 
 
     # Observed vs Fitted with line
@@ -198,7 +200,8 @@ def display_model(region):
                              text=f'Slope={ols_slope}<br>Ideal slope={expected_slope}'), row=2, col=2)
     fig.update_layout(xaxis4={'title': 'Quantiles of N(0,1)'}, yaxis4={'title': 'Deviance residual quantiles'})
 
-
+    # close the figure to avoid freesurfer-analysis/issues/4
+    plt.close(mpl_fig)
 
     # of the whole subplot
     fig.update_layout(title='Generalized linear model fitting on control group:')
@@ -271,7 +274,7 @@ if __name__ == '__main__':
         html.Div([
             dcc.Dropdown(
                 id='region',
-                options=[{'label': i, 'value': i} for i in regions],
+                options=[{'label': i, 'value': i} for i in regions if isfile(pjoin(outDir, f'.{i}.pkl'))],
                 value=regions[0]
             )
         ],

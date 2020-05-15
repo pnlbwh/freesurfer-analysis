@@ -209,18 +209,24 @@ def display_model(region):
 
     # https://github.com/statsmodels/statsmodels/blob/160911ace8119eefe0e66998ea56d24e590fc415/statsmodels/base/model.py#L2457
     llr= -2*(res.llnull - res.llf)
-    llr_pvalue= chi2.sf(llr, res.df_model)
+    llr_pvalue= round(chi2.sf(llr, res.df_model),4)
     # https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-what-are-pseudo-r-squareds/
-    prsquared= 1- res.llf/res.llnull
+    prsquared= round(1- res.llf/res.llnull,4)
 
-    desc= str(res.summary())+'\n' + f'`llr_pvalue`: {llr_pvalue}'+'\n' + f'`Psuedo R^2`: {prsquared}' + '\n'
-    # interpretation
-    desc += '''
+    desc= f'''
+##### Model summary
+```
+{str(res.summary())}
+llr_pvalue: {llr_pvalue}
+Psuedo R^2: {prsquared}
+```
+
+##### Interpretation
 Direction for interpreting model (there is no single right answer)
 * The lower the `llr_pvalue`, the better is the model fitting
 * The higher the `Psuedo R^2`, the better is the model fitting
-* The lower the pvalue of a particular coefficient, the more significant it is
-* The more compact a confidence interval [0.025 0.975] for a particular coefficient, the better is the estimation 
+* The lower the pvalue (`P>|z|`) of a particular coefficient, the more significant it is
+* The more compact a confidence interval `[0.025 0.975]` for a particular coefficient, the better is the estimation
 '''
 
     return (fig, desc)
@@ -283,8 +289,8 @@ if __name__ == '__main__':
         dcc.Graph(id='stat-graph'),
         dcc.Graph(id='model-graph'),
         html.Br(),
-        'Model summary: ',
-        dcc.Markdown(id='model-summary')
+        dcc.Markdown(id='model-summary'),
+        html.Br()
     ])
 
 
@@ -299,7 +305,7 @@ if __name__ == '__main__':
         model, summary= display_model(region)
 
 
-        return (fig,model, f"```{summary}")
+        return (fig,model, summary)
 
 
     app.run_server(debug=True, port= compare_port, host= 'localhost')

@@ -223,10 +223,14 @@ Psuedo R^2: {prsquared}
 
 ##### Interpretation
 Direction for interpreting model (there is no single right answer)
-* The lower the `llr_pvalue`, the better is the model fitting
-* The higher the `Psuedo R^2`, the better is the model fitting
+* The lower the `llr_pvalue`, the better is the model fitting ~
+* The higher the `Psuedo R^2`, the better is the model fitting &#134
 * The lower the pvalue (`P>|z|`) of a particular coefficient, the more significant it is
 * The more compact a confidence interval `[0.025 0.975]` for a particular coefficient, the better is the estimation
+
+~ Null hypothesis: fitted model is independent of the observation
+
+&#134 Null hypothesis: the coefficient is zero based on the assumed model
 '''
 
     return (fig, desc)

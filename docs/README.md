@@ -181,7 +181,7 @@ largely deviates from the expected slope in the Q-Q plot:
 Interpreting model summary requires some degree of statistical knowledge. However, a few generalized direction is 
 provided at the end of the summary that can be utilized to interpret goodness of fit.
 
-```bash
+```rest
 # Model summary
 
                       Generalized Linear Model Regression Results                      

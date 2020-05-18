@@ -110,7 +110,7 @@ def plot_graph(region, NUM_STD=2):
         ],
         'layout': dict(
             xaxis={
-                'title': 'Subject ID'
+                'title': 'Index of subjects'
             },
             yaxis={
                 'title': region
@@ -151,17 +151,23 @@ def display_model(region):
     line_fit = sm.OLS(Y, sm.add_constant(Yhat, prepend=True)).fit()
 
 
+    # STY
+    # all the go.Scatter() functions can accept
+    # text=[f'Sub: {id}, zscore: {z}' for id, z in zip(subjects[inliers], zscores[inliers])]
+    # for labelling each data point, however omitted, for brevity
+
+
     # endog vs exog
     if len(res.params)<=2:
         fig.add_trace(go.Scatter(x=X, y=Y,
-                                 mode='markers'), row=1, col=1)
+                                 mode='markers', name=''), row=1, col=1)
         fig.update_layout(xaxis={'title': res.model.exog_names[-1]}, yaxis={'title': 'volume'})
 
 
 
     # Observed vs Fitted with line
     fig.add_trace(go.Scatter(x=Yhat, y=Y,
-                             mode='markers'), row=1, col=2)
+                             mode='markers', name=''), row=1, col=2)
 
     xline, yline= calc_line(line_fit.model.exog, line_fit.params[0], line_fit.params[1])
     fig.add_trace(go.Scatter(x=xline, y=yline,
@@ -173,7 +179,7 @@ def display_model(region):
 
     # Residuals vs Fitted
     fig.add_trace(go.Scatter(x=Yhat, y=res.resid_pearson,
-                             mode='markers'), row=2, col=1)
+                             mode='markers', name=''), row=2, col=1)
     fig.add_trace(go.Scatter(x=np.linspace(Yhat.min(), Yhat.max(), NUM_POINTS), y=[0]*NUM_POINTS,
                              mode='lines', name='zero residual',
                              line={'width': 3}), row=2, col=1)
@@ -193,7 +199,7 @@ def display_model(region):
     expected_slope= round(res.resid_deviance.std(),3)
 
     fig.add_trace(go.Scatter(x=ax.lines[0].get_xdata(), y=ax.lines[0].get_ydata(),
-                             mode='markers'), row=2, col=2)
+                             mode='markers', name=''), row=2, col=2)
     fig.add_trace(go.Scatter(x=ax.lines[1].get_xdata(), y=ax.lines[1].get_ydata(),
                              mode='lines', name='OLS line',
                              line={'width': 3},

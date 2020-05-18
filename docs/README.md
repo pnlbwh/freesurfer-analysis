@@ -101,20 +101,20 @@ age + weight + ethnicity
 
 > python scripts\generate-summary.py -i asegstats_residuals.csv -o dem_corrected/
 
-As before, view the summary on http://localhost:8050
+As before, you can view the summary on http://localhost:8050
 
 * compare uncorrected and corrected outliers
 
 > python scripts\compare_correction.py -i asegstats_combined.csv -c asegstats_age_residuals.csv -p participants.csv 
 -o dem_corrected/
 
-Open http://localhost:8053
+Open http://localhost:8053 to view the effect of demographics
 
 ## Interpret results
 
 ### Graph interpretation
 
-* inlers and outliers
+* inliers and outliers
 
 ![](./out_become_in.PNG)
 
@@ -166,7 +166,7 @@ The above interpretation is taken from Residuals and Model Fit chapter of [1].
 Examples:
 
 Good residuals for Right Accumbens volume vs age where residuals are well distributed on both sides of zero and closely 
-follows the expeted slope in the Q-Q plot.
+follows the expected slope in the Q-Q plot.
 
 ![](good_residuals.PNG)
 
@@ -181,8 +181,9 @@ largely deviates from the expected slope in the Q-Q plot:
 Interpreting model summary requires some degree of statistical knowledge. However, a few generalized direction is 
 provided at the end of the summary that can be utilized to interpret goodness of fit.
 
-```html
+```bash
 # Model summary
+
                       Generalized Linear Model Regression Results                      
 =======================================================================================
 Dep. Variable:     Q("Left-Lateral-Ventricle")   No. Observations:                   52
@@ -202,6 +203,7 @@ age          -76.0032    125.392     -0.606      0.544    -321.767     169.761
 ==============================================================================
 llr_pvalue: 0.5236
 Psuedo R^2: 0.0004
+
 
 # Interpretation
 

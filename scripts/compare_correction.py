@@ -172,7 +172,8 @@ def display_model(region):
     xline, yline= calc_line(line_fit.model.exog, line_fit.params[0], line_fit.params[1])
     fig.add_trace(go.Scatter(x=xline, y=yline,
                              mode='lines', name='OLS line',
-                             line={'width': 3}), row=1, col=2)
+                             line={'width': 3},
+                             text=f'Slope={round(line_fit.params[1],3)}<br>Ideal slope=1.0'), row=1, col=2)
     fig.update_layout(xaxis2={'title': 'Fitted values'}, yaxis2={'title': 'Observed values'})
 
 

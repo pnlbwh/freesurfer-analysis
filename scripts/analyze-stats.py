@@ -96,7 +96,7 @@ def plot_graph(region, NUM_STD=2):
         ],
         'layout': dict(
             xaxis={
-                'title': 'Subject ID'
+                'title': 'Index of subjects'
             },
             yaxis={
                 'title': region

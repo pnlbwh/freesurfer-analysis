@@ -161,7 +161,7 @@ are approximately normally distributed. If one were to plot perfectly normally d
 the N(0,1) benchmark here, the plot would be an approximately straight line with slope equal to the standard deviation 
 of the normal variates. 
 
-The above interpretation is taken from Residuals and Model Fit chapter of [1].
+The above interpretation is taken from "Residuals and Model Fit" chapter of [1].
 
 Examples:
 

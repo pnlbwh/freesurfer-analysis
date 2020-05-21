@@ -62,6 +62,10 @@ Visualize effect of demographics on a web browser (http://localhost:8054):
 
 ## Perform analysis
 
+> python scripts\demography-effect.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3" --effect age
+
+The above command comprises the following steps. They are noted here in case it helps debugging any issue.
+
 * combine demography
 
 > python scripts\combine_demography.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3"
@@ -99,7 +103,7 @@ age + weight + ethnicity
 
 * obtain and view summary
 
-> python scripts\generate-summary.py -i asegstats_residuals.csv -o dem_corrected/
+> python scripts\generate-summary.py -i asegstats_age_residuals.csv -o dem_corrected/
 
 As before, you can view the summary on http://localhost:8050
 

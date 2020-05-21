@@ -45,14 +45,22 @@ def plot_graph(region, NUM_STD=2):
     zscores = np.array([round((y - val_mean) / val_std, 4) if val_std else 0 for y in df[region].values])
     inliers = abs(zscores) <= NUM_STD
 
-    zscores= np.array([round((y-val_mean)/val_std,4) if val_std else 0 for y in df[region].values])
-
     serial = np.arange(L)
 
     # modify inliers according to df_resid
     if df[region].any():
-        inliers_corrected= abs(zscore(df_resid[region].values)) <= NUM_STD
-        inliers= np.logical_and(inliers, inliers_corrected)
+        # correct outliers only, a few inliers would become outliers, some blues become reds
+        # inliers_corrected= abs(zscore(df_resid[region].values)) <= NUM_STD
+        # inliers= np.logical_and(inliers, inliers_corrected)
+
+        # correct inliers only, a few outliers would become inliers, some reds become blues
+        # outliers_corrected= abs(zscore(df_resid[region].values)) > NUM_STD
+        # inliers = ~np.logical_and(~inliers, outliers_corrected)
+
+        # correct both, change of some inliers and outliers
+        # identifiable by color
+        # should be the best logic
+        inliers= abs(zscore(df_resid[region].values)) <= NUM_STD
 
     fig = go.Figure({
         'data': [

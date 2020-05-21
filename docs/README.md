@@ -116,12 +116,12 @@ Open http://localhost:8053 to view the effect of demographics
 
 * inliers and outliers
 
-![](./out_become_in.PNG)
+![](./out_in_change.PNG)
 
-Due to the introduction of effect of demographic variables, some outliers have become inliers. Notice some red circles 
-coming within the acceptable standard score range. Inverse effect can also be found-- some inliers become outliers i.e. 
-the blue circles go outside the acceptable standard score range. Hover your cursor over the data points to find out 
-subject IDs and standard scores.
+Due to the introduction of effect of demographic variables, some outliers have become inliers and vice-versa. 
+Notice some blue circles within the acceptable standard score range became red i.e. inliers became outliers. 
+Inverse effect can also be seen-- outliers became inliers i.e. some red circles outside the acceptable 
+standard score range became blue. Hover your cursor over the data points to find out subject IDs and standard scores.
 
 
 * response vs independent variables

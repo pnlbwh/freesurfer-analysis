@@ -293,6 +293,7 @@ if __name__ == '__main__':
         # write outlier summary
         df_inliers[column_name] = zscores
 
+
     df_inliers.to_csv(pjoin(outDir, 'outliers.csv'), index=False)
 
     app.layout = html.Div([
@@ -328,4 +329,4 @@ if __name__ == '__main__':
         return (fig,model, summary)
 
 
-    app.run_server(debug=True, port= compare_port, host= 'localhost')
+    app.run_server(debug=False, port= compare_port, host= 'localhost')

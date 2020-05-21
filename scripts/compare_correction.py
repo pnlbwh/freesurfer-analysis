@@ -58,7 +58,8 @@ def plot_graph(region, NUM_STD=2):
         # inliers = ~np.logical_and(~inliers, outliers_corrected)
 
         # correct both, change of some inliers and outliers
-        # identifiable by color
+        # identifiable by color only, disregard the acceptable range of NUM_STD
+        # original zscores are preserved
         # should be the best logic
         inliers= abs(zscore(df_resid[region].values)) <= NUM_STD
 

@@ -36,8 +36,6 @@ def plot_graph(region, NUM_STD=2):
     zscores = np.array([round((y - val_mean) / val_std, 4) if val_std else 0 for y in df[region].values])
     inliers = abs(zscores) <= NUM_STD
 
-    zscores= np.array([round((y-val_mean)/val_std,4) if val_std else 0 for y in df[region].values])
-
     serial = np.arange(L)
 
     fig = go.Figure({

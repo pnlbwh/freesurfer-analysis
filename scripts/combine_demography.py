@@ -55,6 +55,9 @@ if __name__ == '__main__':
         temp= df_demograph[attr]
         dfcomb[attr]= temp.astype(temp.dtype)
 
+    id_col_hdr= df.columns[0]
+    dfcomb[id_col_hdr]= dfcomb[id_col_hdr].astype(df[id_col_hdr].dtype)
+
     prefix= splitext(basename(args.input))[0]
     dfcomb.to_csv(pjoin(outDir, prefix+'_combined.csv'), index=False)
 

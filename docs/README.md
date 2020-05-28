@@ -120,6 +120,13 @@ Open http://localhost:8053 to view the effect of demographics
 
 * inliers and outliers
 
+For the uncorrected case, inliers and outliers were decided upon comparing standard scores of measures (i.e. volumes) 
+against acceptable extent (i.e 2 STD). For the demographics corrected case, modified standard scores are computed based 
+on the residuals-- (GLM predicted - given)^2. To allow visualization of outlier<-->inlier transition, the data are 
+displayed with given measures (not the residuals) on the Y axis but changing their color according to modified standard 
+scores. The label of each point, displayed upon hovering cursor, shows both standard scores to give the user a comprehensive idea. 
+Graphs with residuals on the Y axis and modified standard scores can be found in another port-- http://localhost:8051 . 
+
 ![](./out_in_change.PNG)
 
 Due to the introduction of effect of demographic variables, some outliers have become inliers and vice-versa. 

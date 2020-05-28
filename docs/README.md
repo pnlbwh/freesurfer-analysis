@@ -232,6 +232,35 @@ the more variability is explained in the fitted model i.e. the better it is.
 of the model i.e. the better it is.
 
 
+References for [various attributes](https://www.statsmodels.org/dev/generated/statsmodels.genmod.generalized_linear_model.GLMResults.html) in the summary are given below:
+
+* Df Residuals
+* Df Model
+
+Df Residuals and Df Model are explained [here](https://www.statsmodels.org/dev/generated/statsmodels.genmod.generalized_linear_model.GLM)
+
+* [Scale](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/generalized_linear_model.py#L772)
+
+* [Log-Likelihood](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/families/family.py#L284)
+    * Gaussian [`loglike_obs`](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/families/family.py#L555)
+
+* [Deviance](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/families/family.py#L136)
+    * Gaussian [`_resid_dev`](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/families/family.py#L531)
+    * Also see [here](https://www.statsmodels.org/dev/generated/statsmodels.genmod.families.family.Gaussian.deviance.html#statsmodels.genmod.families.family.Gaussian.deviance)
+    
+* [Pearson chi2](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/genmod/generalized_linear_model.py#L1554)
+* [std err](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L1346)
+* [z](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L1358)
+* [P>|z|](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L1365)
+* [[0.025 0.975]](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L2051)
+
+* llr_pvalue
+* Psuedo R^2
+
+`llr_pvalue` and `Psuedo R^2` are explained [here](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L2437)
+
+
+
 # Troubleshooting
 
 * `Address already in use`: The error implies that the port mentioned in 

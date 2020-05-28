@@ -48,7 +48,9 @@ def plot_graph(region, NUM_STD=2):
     serial = np.arange(L)
 
     # modify inliers according to df_resid
+    corr_zscores= np.empty(zscores.shape)
     if df[region].any():
+        corr_zscores= np.round(zscore(df_resid[region].values), 4)
         # correct outliers only, a few inliers would become outliers, some blues become reds
         # inliers_corrected= abs(zscore(df_resid[region].values)) <= NUM_STD
         # inliers= np.logical_and(inliers, inliers_corrected)
@@ -69,7 +71,8 @@ def plot_graph(region, NUM_STD=2):
             dict(
                 x=serial[inliers],
                 y=df[region].values[inliers],
-                text=[f'Sub: {id}, zscore: {z}' for id,z in zip(subjects[inliers],zscores[inliers])],
+                text=[f'Sub: {id}, zscore: {z}<br>Corrected zscore: {zc}'
+                      for id, z, zc in zip(subjects[inliers], zscores[inliers], corr_zscores[inliers])],
                 mode='markers',
                 name='inliers',
                 marker={
@@ -82,7 +85,8 @@ def plot_graph(region, NUM_STD=2):
             dict(
                 x=serial[~inliers],
                 y=df[region].values[~inliers],
-                text=[f'Sub: {id}, zscore: {z}' for id,z in zip(subjects[~inliers],zscores[~inliers])],
+                text=[f'Sub: {id}, zscore: {z}<br>Corrected zscore {zc}'
+                      for id,z,zc in zip(subjects[~inliers],zscores[~inliers],corr_zscores[~inliers])],
                 mode='markers',
                 name='outliers',
                 marker={
@@ -307,7 +311,10 @@ if __name__ == '__main__':
         ],
             style={'width': '48%', 'display': 'inline-block'}),
 
+        html.Br(),
+        'Corrected outliers, superimposed on the uncorrected ones, accounting for standard score of the residuals:',
         dcc.Graph(id='stat-graph'),
+        'Only corrected outliers accounting for standard score of the residuals can be found at http://localhost:8051',
         dcc.Graph(id='model-graph'),
         html.Br(),
         dcc.Markdown(id='model-summary'),

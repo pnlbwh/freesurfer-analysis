@@ -55,6 +55,17 @@ if __name__ == '__main__':
     } for c in df.columns[1:]]:
         data_condition.append(d)
 
+    for d in [{
+        'if': {
+            'column_id': c,
+            'filter_query': f'{{{c}}} lt -{args.extent}',
+        },
+        'backgroundColor': 'red',
+        'color': 'black',
+        'fontWeight': 'bold'
+    } for c in df.columns[1:]]:
+        data_condition.append(d)
+
     app.layout = html.Div([
 
         'Type of visual inspection upon selecting a cell: ',

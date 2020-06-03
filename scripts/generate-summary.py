@@ -92,7 +92,7 @@ def show_stats_table(graphs, table):
                         f'-t {args.template}' if args.template else '',
                         '-e', str(args.extent)]), shell=True)
 
-        sleep(5)
+        sleep(10)
         url= f'http://localhost:{table_port}'
         print(f'\n\nDisplaying table at {url}\n\n')
         webbrowser.open(url)

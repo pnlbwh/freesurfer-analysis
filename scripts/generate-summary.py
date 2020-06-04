@@ -15,9 +15,10 @@ from glob import glob
 from subprocess import Popen, check_call
 from time import sleep
 import logging
-from util import ports_check
 
-# from ports import summary_port, graphs_port, table_port
+from verify_ports import get_ports
+dash_ports = get_ports()
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -155,8 +156,6 @@ if __name__ == '__main__':
 
     # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats/'
-
-    dash_ports= ports_check()
 
     args= parser.parse_args()
     outDir= abspath(args.output)

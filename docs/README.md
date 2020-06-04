@@ -273,6 +273,18 @@ Df Residuals and Df Model are explained [here](https://www.statsmodels.org/dev/g
 * `Address already in use`: The error implies that the port mentioned in 
 `app.run_server(debug=False, port= 8040, host= 'localhost')` is already in use.
 
+
+```bash
+Traceback (most recent call last):
+  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\demography-effect.py", line 54, in <module>
+    get_ports()
+  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\verify_ports.py", line 34, in get_ports
+    check_port(key, port)
+  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\verify_ports.py", line 49, in check_port
+    raise EnvironmentError(f'http://localhost:{port} is in use, specify another port for {key}')
+OSError: http://localhost:8052 is in use, specify another port for table_port
+```
+or
 ```bash
 Traceback (most recent call last):
   File "/data/pnl/soft/pnlpipe3/freesurfer-analysis/scripts/analyze-stats.py", line 170, in <module>
@@ -302,12 +314,17 @@ One way to solve this issue would be to follow
 https://stackoverflow.com/questions/11583562/how-to-kill-a-process-running-on-particular-port-in-linux .
 However, if you do not have privilege over that port, you might not be able to stop it from listening. 
 
-In that case, open `scripts/ports.py` and assign another four digit port to the variable reported in the traceback, and try again:
+In that case, open `scripts/ports.cfg` and assign another four digit port to the variable reported in the traceback, and try again:
 
     summary_port=8050
     graphs_port=8051
     table_port=8052
     compare_port=8053
+
+In a shared environment, you may not have edit permission for `scripts/ports.cfg`. In that case, copy `scripts/ports.cfg` 
+to your home directory, edit them, and finally define environment variable: 
+
+    export DASH_PORTS=/path/to/your/ports.cfg
 
 
 * Provide -d

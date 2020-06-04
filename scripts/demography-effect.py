@@ -5,6 +5,7 @@ from os.path import isfile, isdir, abspath, dirname, basename, join as pjoin, sp
 from os import makedirs, remove
 SCRIPTDIR=dirname(abspath(__file__))
 from subprocess import check_call, Popen
+from verify_ports import get_ports
 
 
 if __name__ == '__main__':
@@ -50,6 +51,7 @@ In total, its purpose is to calculate outliers incorporating demographics and di
 
     args = parser.parse_args()
 
+    get_ports()
 
     # python scripts\combine_demography.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3"
     exe= pjoin(SCRIPTDIR, 'combine_demography.py')

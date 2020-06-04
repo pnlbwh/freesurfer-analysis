@@ -21,7 +21,8 @@ import argparse
 import logging
 
 from util import delimiter_dict
-from ports import compare_port
+from verify_ports import get_ports
+compare_port= get_ports('compare_port')
 
 NUM_POINTS=20
 

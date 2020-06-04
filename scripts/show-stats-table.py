@@ -14,7 +14,8 @@ import webbrowser
 from subprocess import check_call
 import logging
 
-from ports import table_port
+from verify_ports import get_ports
+table_port= get_ports('table_port')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 

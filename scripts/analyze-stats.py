@@ -14,7 +14,8 @@ import argparse
 import logging
 
 from util import delimiter_dict
-from ports import graphs_port
+from verify_ports import get_ports
+graphs_port= get_ports('graphs_port')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 

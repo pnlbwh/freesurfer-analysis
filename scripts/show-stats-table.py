@@ -14,7 +14,8 @@ import webbrowser
 from subprocess import check_call
 import logging
 
-from ports import table_port
+from verify_ports import get_ports
+table_port= get_ports('table_port')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -48,6 +49,17 @@ if __name__ == '__main__':
         'if': {
             'column_id': c,
             'filter_query': f'{{{c}}} gt {args.extent}',
+        },
+        'backgroundColor': 'red',
+        'color': 'black',
+        'fontWeight': 'bold'
+    } for c in df.columns[1:]]:
+        data_condition.append(d)
+
+    for d in [{
+        'if': {
+            'column_id': c,
+            'filter_query': f'{{{c}}} lt -{args.extent}',
         },
         'backgroundColor': 'red',
         'color': 'black',

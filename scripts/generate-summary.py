@@ -16,7 +16,9 @@ from subprocess import Popen, check_call
 from time import sleep
 import logging
 
-from ports import summary_port, graphs_port, table_port
+from verify_ports import get_ports
+dash_ports = get_ports()
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -81,7 +83,7 @@ def show_stats_table(graphs, table):
     if int(graphs)>int(table):
         # analyze-stats program have already been executed in the background
         # open localhost:graphs_port
-        url= f'http://localhost:{graphs_port}'
+        url= 'http://localhost:{}'.format(dash_ports['graphs_port'])
         print(f'\n\nDisplaying graphs at {url}\n\n')
         webbrowser.open(url)
     elif int(table)>int(graphs):
@@ -92,8 +94,8 @@ def show_stats_table(graphs, table):
                         f'-t {args.template}' if args.template else '',
                         '-e', str(args.extent)]), shell=True)
 
-        sleep(5)
-        url= f'http://localhost:{table_port}'
+        sleep(10)
+        url= 'http://localhost:{}'.format(dash_ports['table_port'])
         print(f'\n\nDisplaying table at {url}\n\n')
         webbrowser.open(url)
 
@@ -177,5 +179,5 @@ if __name__ == '__main__':
     df= pd.read_csv(outliers)
 
     # webbrowser.open_new(f'http://localhost:{summary_port}')
-    app.run_server(debug=False, port= summary_port, host= 'localhost')
+    app.run_server(debug=False, port= dash_ports['summary_port'], host= 'localhost')
 

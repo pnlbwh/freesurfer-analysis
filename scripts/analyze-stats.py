@@ -13,7 +13,9 @@ import numpy as np
 import argparse
 import logging
 
-from ports import graphs_port
+from util import delimiter_dict
+from verify_ports import get_ports
+graphs_port= get_ports('graphs_port')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -34,8 +36,6 @@ def plot_graph(region, NUM_STD=2):
     # we need val_mean and val_std anyway so no using scipy.stats.zscore function
     zscores = np.array([round((y - val_mean) / val_std, 4) if val_std else 0 for y in df[region].values])
     inliers = abs(zscores) <= NUM_STD
-
-    zscores= np.array([round((y-val_mean)/val_std,4) if val_std else 0 for y in df[region].values])
 
     serial = np.arange(L)
 
@@ -95,7 +95,7 @@ def plot_graph(region, NUM_STD=2):
         ],
         'layout': dict(
             xaxis={
-                'title': 'Subject ID'
+                'title': 'Index of subjects'
             },
             yaxis={
                 'title': region
@@ -133,11 +133,6 @@ if __name__ == '__main__':
     # df = pd.read_csv('C://Users/tashr/Documents/asegstats_lh.csv')
     # df = pd.read_csv('C://Users/tashr/Documents/aparcstats_lh.csv')
     # outDir = 'C://Users/tashr/Documents/fs-stats-aparc/'
-
-    delimiter_dict={'comma':',',
-                    'tab':'\t',
-                    'semicolon':';',
-                    'space':' '}
 
     df = pd.read_csv(abspath(args.input),sep=delimiter_dict[args.delimiter])
     regions = df.columns.values[1:]

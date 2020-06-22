@@ -43,8 +43,8 @@ app.layout = html.Div([
 
         style={
             'width': '20%',
-            # 'height': '60px',
-            # 'lineHeight': '60px',
+            # 'height': '40px',
+            # 'lineHeight': '40x',
             'borderWidth': '1px',
             'borderStyle': 'dashed',
             'borderRadius': '5px',
@@ -55,8 +55,21 @@ app.layout = html.Div([
 
 
     # html.Br(),
-    'Output directory: ',
-    dcc.Input(id='outDir'),
+    dcc.Input(id='outDir',
+              placeholder='Output directory',
+              style={
+                  'width': '20%',
+                  # 'height': '40px',
+                  # 'lineHeight': '40px',
+                  'borderWidth': '1px',
+                  # 'borderStyle': 'dashed',
+                  'borderRadius': '5px',
+                  'textAlign': 'center',
+                  # 'margin': '10px'
+              },
+              ),
+
+    html.Br(),
     html.Br(),
 
     html.Div([
@@ -64,11 +77,11 @@ app.layout = html.Div([
                     n_clicks_timestamp=0,
                     children='Analyze summary',
                     title='Analyze summary to detect outliers')],
-        style={'float': 'left', 'display': 'inline-block'}),
+        style={'float': 'center', 'display': 'inline-block'}),
 
     html.Br(),
     html.Br(),
-    # html.Div(id='graph'),
+
 
     html.Div([
 
@@ -126,4 +139,4 @@ def update_graph(df, region):
 
 
 if __name__=='__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=False, port=graphs_port, host='localhost')

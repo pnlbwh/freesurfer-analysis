@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import base64, io
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -92,13 +93,17 @@ app.layout = html.Div([
 
 
 @app.callback([Output('region', 'options'), Output('df', 'data')],
-              [Input('analyze', 'n_clicks')])
-def show_stats_table(analyze):
+              [Input('csv','contents'), Input('analyze', 'n_clicks')])
+def show_stats_table(raw_contents, analyze):
     # print(analyze)
     if not analyze:
         raise PreventUpdate
 
-    df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
+    # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
+
+    _, contents = raw_contents.split(',')
+    decoded = base64.b64decode(contents)
+    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
 
     regions = df.columns.values[1:]
     # do the analysis here

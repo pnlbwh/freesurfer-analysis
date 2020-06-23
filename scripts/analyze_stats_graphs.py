@@ -5,6 +5,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
+from dash_table import DataTable
+from dash_table.Format import Format
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin
 from os import makedirs
@@ -20,6 +22,7 @@ import logging
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 graphs = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app= dash.Dash(__name__, external_stylesheets=external_stylesheets)
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
@@ -117,6 +120,85 @@ def plot_graph(df, region, NUM_STD=2):
 
     return (fig, inliers, zscores)
 
+def show_table(df, NUM_STD=2):
+
+    subjects = df[df.columns[0]].values
+
+    data_condition = [{
+        'if': {'row_index': 'odd'},
+        'backgroundColor': 'rgb(240, 240, 240)'
+    }]
+
+    for d in [{
+        'if': {
+            'column_id': c,
+            'filter_query': f'{{{c}}} gt {NUM_STD}',
+        },
+        'backgroundColor': 'red',
+        'color': 'black',
+        'fontWeight': 'bold'
+    } for c in df.columns[1:]]:
+        data_condition.append(d)
+
+    for d in [{
+        'if': {
+            'column_id': c,
+            'filter_query': f'{{{c}}} lt -{NUM_STD}',
+        },
+        'backgroundColor': 'red',
+        'color': 'black',
+        'fontWeight': 'bold'
+    } for c in df.columns[1:]]:
+        data_condition.append(d)
+
+    app.layout = html.Div([
+
+        'Type of visual inspection upon selecting a cell: ',
+        html.Div([
+            dcc.Dropdown(
+                id='view-type',
+                options=[{'label': i, 'value': i} for i in ['snapshot', 'freeview']],
+                value='snapshot'
+            )
+        ],
+            style={'width': '20%', }),
+        html.Br(),
+
+        DataTable(
+            id='table',
+            columns=[{'name': f'\n{i}',
+                      'id': i,
+                      'hideable': True,
+                      'type': 'numeric',
+                      'format': Format(precision=4),
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='native',
+            sort_action='native',
+            style_data_conditional=data_condition,
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'minWidth': '100px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+
+            tooltip_duration= None,
+            tooltip_data=[{c:
+                {
+                    'type': 'text',
+                    'value': f'{r}, {c}'
+                } for c in df.columns
+            } for r in subjects]
+        ),
+        html.Div(id='table-tooltip')
+    ])
+
+    return app.layout
 
 # graphs.layout = html.Div([
 #

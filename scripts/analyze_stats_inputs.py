@@ -17,15 +17,15 @@ import logging
 
 from util import delimiter_dict
 from verify_ports import get_ports
-from analyze_stats_graphs import plot_graph
+from analyze_stats_graphs import plot_graph, show_table
 
 graphs_port= get_ports('graphs_port')
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-log= logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
+# log= logging.getLogger('werkzeug')
+# log.setLevel(logging.ERROR)
 
 EXTENT=2
 DELIM='comma'
@@ -82,6 +82,16 @@ app.layout = html.Div([
     html.Br(),
     html.Br(),
 
+    html.Div([
+        html.Button(id='show-stats',
+                    n_clicks_timestamp=0,
+                    children='Show stats table',
+                    title='See standard scores')],
+        style={'float': 'center', 'display': 'inline-block'}),
+
+    html.Br(),
+    html.Br(),
+
 
     html.Div([
 
@@ -102,12 +112,39 @@ app.layout = html.Div([
     dcc.Store(id='df'),
     # dcc.Store(id='region')
 
+    html.Div(id='page-content'),
 ])
+
+# callback for stats table
+@app.callback(Output('page-content', 'children'),
+              [Input('df','data'), Input('show-stats','n_clicks')])
+def show_stats_table(df, button):
+    # print(button)
+    if not button:
+        raise PreventUpdate
+
+    df= pd.DataFrame(df)
+    regions = df.columns.values[1:]
+
+    # generate all figures
+    df_inliers= df.copy()
+    for column_name in regions:
+        print(column_name)
+        _, inliers, zscores= plot_graph(df, column_name)
+
+        # write outlier summary
+        df_inliers[column_name] = zscores
+
+    # df_inliers.to_csv(pjoin(outDir, 'outliers.csv'), index=False)
+
+
+    return show_table(df_inliers)
+
 
 
 @app.callback([Output('region', 'options'), Output('df', 'data')],
               [Input('csv','contents'), Input('analyze', 'n_clicks')])
-def show_stats_table(raw_contents, analyze):
+def update_dropdown(raw_contents, analyze):
     # print(analyze)
     if not analyze:
         raise PreventUpdate

@@ -151,7 +151,7 @@ def show_table(df, NUM_STD=2):
     } for c in df.columns[1:]]:
         data_condition.append(d)
 
-    app.layout = html.Div([
+    app_layout = html.Div([
 
         'Type of visual inspection upon selecting a cell: ',
         html.Div([
@@ -198,7 +198,7 @@ def show_table(df, NUM_STD=2):
         html.Div(id='table-tooltip')
     ])
 
-    return app.layout
+    return app_layout
 
 # graphs.layout = html.Div([
 #

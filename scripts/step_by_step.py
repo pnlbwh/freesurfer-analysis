@@ -33,8 +33,9 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
-from os.path import isfile, isdir, abspath, join as pjoin
+from os.path import isfile, isdir, abspath, join as pjoin, dirname
 from os import makedirs
+from subprocess import check_call
 
 import pandas as pd
 import numpy as np
@@ -59,11 +60,12 @@ DELIM='comma'
 app.layout = html.Div([
 
     html.Div(id='main-content'),
-    # html.Div(id='test-content'),
+    html.Div(id='test-content'),
     html.Div(id='hidden-content', style={'display': 'none'}),
     dcc.Location(id='url', refresh=False),
     html.Br(),
     dcc.Link('Start the application', href='/app'),
+    dcc.Store(id='subjects'),
 
 ])
 
@@ -92,6 +94,22 @@ input_layout = html.Div([
         },
     ),
 
+    html.Br(),
+    dcc.Input(
+        id='outDir',
+        placeholder='Output directory',
+        style={
+            'width': '20%',
+            # 'height': '40px',
+            # 'lineHeight': '40px',
+            'borderWidth': '1px',
+            # 'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            # 'margin': '10px'
+          },
+    ),
+    html.Br(),
 
     html.Div([
         html.Button(id='analyze',
@@ -131,6 +149,7 @@ input_layout = html.Div([
     ]),
 
     dcc.Store(id='df'),
+    # dcc.Store(id='subjects'),
 
     html.Div(id='page-content'),
 
@@ -144,6 +163,22 @@ input_layout = html.Div([
 
 table_layout= html.Div([
     html.H2('Table page'),
+    html.Br(),
+
+    dcc.Input(
+        id='template',
+        placeholder='freesurfer directory template',
+        style={
+            'width': '50%',
+            # 'height': '40px',
+            # 'lineHeight': '40px',
+            'borderWidth': '1px',
+            # 'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            # 'margin': '10px'
+        },
+    ),
     html.Br(),
 
     html.Div([
@@ -206,16 +241,18 @@ def show_stats_table(button, content):
     if not button:
         raise PreventUpdate
 
-    print(content)
+    # print(content)
 
-    content['style']= {}
+    # NOTE this statement is ineffectual
+    # in its absence, it was expected that content would remain hidden in table_layout, but it is not
+    # content['style']= {}
 
 
     return content
 
 
 # callback for input_layout
-@app.callback([Output('region', 'options'), Output('df', 'data')],
+@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
               [Input('csv','contents'), Input('analyze', 'n_clicks')])
 def update_dropdown(raw_contents, analyze):
     # print(analyze)
@@ -228,11 +265,12 @@ def update_dropdown(raw_contents, analyze):
     decoded = base64.b64decode(contents)
     df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
 
+    subjects = df[df.columns[0]].values
     regions = df.columns.values[1:]
     # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
-    return (options, df.to_dict())
+    return (options, df.to_dict(), subjects)
 
 
 @app.callback(
@@ -246,6 +284,30 @@ def update_graph(df, region):
     fig, _, _ = plot_graph(pd.DataFrame(df), region)
 
     return fig
+
+
+@app.callback(Output('table-tooltip', 'children'), # input_layout
+              [Input('table', 'selected_cells'), # input_layout
+               Input('view-type', 'value'), # input_layout
+               Input('template', 'value'), # table_layout
+               Input('subjects', 'data')]) # app.layout
+def get_active_cell(selected_cells, view_type, template, subjects):
+    if selected_cells:
+        # subjects should be saved in a State variable in
+        # subjects = df[df.columns[0]].values
+        temp = selected_cells[0]
+        print(temp)
+
+        if not template:
+            raise PreventUpdate
+        # nilearn or freeview rendering
+        fsdir= template.replace('$', str(subjects[temp['row']]))
+        # print(fsdir)
+        if isdir(fsdir):
+            check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
+                                 '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
+
+    raise PreventUpdate
 
 
 

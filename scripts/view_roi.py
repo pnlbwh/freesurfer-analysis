@@ -127,7 +127,7 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
     close(froi)
     remove(roi_mgh)
 
-# if __name__=='__main__':
+if __name__=='__main__':
     # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
     # lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
     # lut_colors= load_lut(lut)

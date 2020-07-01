@@ -368,8 +368,7 @@ def update_summary(df, outDir, extent, group_by):
                     'id': i,
                     'hideable': True,
                     } for i in dfs.columns]
-
-        print(columns)
+        
         for i,region in enumerate(df.columns[1:]):
             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]

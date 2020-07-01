@@ -9,7 +9,7 @@ from dash_table import DataTable
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs
+from os import makedirs, getenv
 from subprocess import check_call
 
 import pandas as pd
@@ -18,6 +18,7 @@ import argparse
 import logging
 
 from analyze_stats_graphs import plot_graph, show_table
+from view_roi import load_lut, render_roi
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
@@ -317,12 +318,14 @@ def show_stats_table(df, activate, outDir):
 
 
 # callback within table_layout
-@app.callback(Output('table-tooltip', 'children'),
+# @app.callback([Output('table-tooltip', 'children'), Output('roi', 'src')],
+@app.callback(Output('roi', 'src'),
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),
-               Input('subjects', 'data')])
-def get_active_cell(selected_cells, view_type, template, subjects):
+               Input('subjects', 'data'),
+               Input('outDir', 'value')])
+def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
     if selected_cells:
         temp = selected_cells[0]
@@ -333,8 +336,23 @@ def get_active_cell(selected_cells, view_type, template, subjects):
         # nilearn or freeview rendering
         fsdir= template.replace('$', str(subjects[temp['row']]))
         if isdir(fsdir):
-            check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
-                                 '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
+            fshome = getenv('FREESURFER_HOME', None)
+            if not fshome:
+                raise EnvironmentError('Please set FREESURFER_HOME and then try again')
+            lut = pjoin(fshome, 'FreeSurferColorLUT.txt')
+            lut = load_lut(lut)
+
+            region= temp['column_id']
+            roi_png= pjoin(outDir,f'{region}.png')
+            render_roi(region, fsdir, lut, roi_png, method='snapshot')
+            roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
+
+            return 'data:image/png;base64,{}'.format(roi_base64)
+
+            # check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
+            #                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
+
+            # TODO delete roi_png
 
     raise PreventUpdate
 
@@ -368,7 +386,7 @@ def update_summary(df, outDir, extent, group_by):
                     'id': i,
                     'hideable': True,
                     } for i in dfs.columns]
-        
+
         for i,region in enumerate(df.columns[1:]):
             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]

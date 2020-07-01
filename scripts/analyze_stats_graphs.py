@@ -200,6 +200,45 @@ def show_table(df, NUM_STD=2):
 
     return app_layout
 
+
+summary_layout = html.Div([
+
+        'Group outliers by: ',
+        html.Div([
+            dcc.Dropdown(
+                id='group-by',
+                options=[{'label': i, 'value': i} for i in ['subjects','regions']],
+                value='subjects'
+            ),
+        ],
+        style = {'width': '20%'}),
+
+
+        html.Br(),
+        DataTable(
+            id='summary',
+            filter_action='native',
+            sort_action='native',
+
+            style_data_conditional=[{
+                'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(240, 240, 240)'
+            }],
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap'
+            },
+
+        ),
+
+])
+
 # graphs.layout = html.Div([
 #
 #     html.Div([

@@ -4,6 +4,8 @@ from nilearn.plotting import plot_roi
 from nibabel import Nifti1Image
 from nibabel.freesurfer import load as fsload
 from nibabel.freesurfer import MGHImage
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot
 from matplotlib.colors import ListedColormap
 from subprocess import check_call
@@ -30,7 +32,7 @@ def load_lut(lut):
 
     return lut_colors
 
-def render_roi(table_header, fsdir, lut, method='snapshot'):
+def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
 
     # define files according to FreeSurfer structure
     brain_mgh= pjoin(fsdir, 'mri/brain.mgz')
@@ -74,8 +76,8 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
 
     if method=='snapshot':
-        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region)
-        pyplot.show()
+        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region, output_file= output_file)
+        # pyplot.show()
 
 
         # if a separate folder is not used as assets_folder, dash will try loading all its content
@@ -125,7 +127,7 @@ def render_roi(table_header, fsdir, lut, method='snapshot'):
     close(froi)
     remove(roi_mgh)
 
-if __name__=='__main__':
+# if __name__=='__main__':
     # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
     # lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
     # lut_colors= load_lut(lut)
@@ -150,6 +152,6 @@ if __name__=='__main__':
         raise EnvironmentError('Please set FREESURFER_HOME and then try again')
     lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
     lut_colors= load_lut(lut)
-    
+
     render_roi(args.label, abspath(args.input), lut_colors, args.view_type)
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import base64, io
 import dash
 import dash_core_components as dcc

@@ -164,6 +164,8 @@ def show_table(df, NUM_STD=2):
             style={'width': '20%', }),
         html.Br(),
 
+        html.Img(id='roi'),
+        html.Br(),
         DataTable(
             id='table',
             columns=[{'name': f'\n{i}',

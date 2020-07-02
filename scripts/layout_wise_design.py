@@ -352,7 +352,7 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
             region= temp['column_id']
             roi_png= pjoin(outDir,f'{region}.png')
-            render_roi(region, fsdir, lut, roi_png, method='snapshot')
+            render_roi(region, fsdir, lut, roi_png, view_type)
             roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
             remove(roi_png)
 

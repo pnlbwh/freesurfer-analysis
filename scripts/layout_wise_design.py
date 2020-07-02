@@ -9,7 +9,7 @@ from dash_table import DataTable
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs, getenv
+from os import makedirs, getenv, chmod
 from subprocess import check_call
 
 import pandas as pd
@@ -294,7 +294,7 @@ def show_stats_table(df, activate, outDir):
 
     outDir= abspath(outDir)
     if not isdir(outDir):
-        makedirs(outDir, exist_ok= True)
+        makedirs(outDir, exist_ok= True, mode=0o775)
 
     # subject column is lost in the following conversion
     df= pd.DataFrame(df)
@@ -311,7 +311,10 @@ def show_stats_table(df, activate, outDir):
         # write outlier summary
         df_inliers[column_name] = zscores
 
-    df_inliers.to_csv(pjoin(outDir, 'outliers.csv'), index=False)
+    filename= pjoin(outDir, 'outliers.csv')
+    df_inliers.to_csv(filename, index=False)
+    chmod(filename,0o664)
+
     layout= show_table(df_inliers)
 
     return (layout, df_inliers.to_dict('list'))
@@ -391,9 +394,11 @@ def update_summary(df, outDir, extent, group_by):
             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
 
-    summary= f'group-by-{group_by}.csv'
+    summary= pjoin(outDir, f'group-by-{group_by}.csv')
     if not isfile(summary):
-        dfs.to_csv(pjoin(outDir, summary), index=False)
+        dfs.to_csv(summary, index=False)
+
+    chmod(summary, 0o664)
 
     return [dfs.to_dict('records'), columns]
 

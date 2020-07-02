@@ -9,7 +9,7 @@ from dash_table import DataTable
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs, getenv, chmod
+from os import makedirs, getenv, chmod, remove
 from subprocess import check_call
 
 import pandas as pd
@@ -28,8 +28,9 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 input_layout = html.Div(
     id= 'input_layout',
     children= [
-        html.Br(),
+
         'Summary csv file',
+        html.Br(),
         dcc.Upload(
             id='csv',
             children=html.Div([
@@ -38,14 +39,14 @@ input_layout = html.Div(
             ]),
 
             style={
-                'width': '20%',
-                # 'height': '40px',
-                # 'lineHeight': '40x',
-                'borderWidth': '1px',
+                'width': '30%',
+                'height': '40px',       # height of the box
+                'lineHeight': '40px',   # height of a carriage return
+                'borderWidth': '1px',   # width of the border
                 'borderStyle': 'dashed',
-                'borderRadius': '5px',
+                'borderRadius': '5px',  # curvature of the border
                 'textAlign': 'center',
-                # 'margin': '10px'
+                # 'margin': '10px'      # margin from left
             },
         ),
 
@@ -66,7 +67,9 @@ input_layout = html.Div(
         ),
 
         html.Br(),
-        'Extent of standard deviation ',
+        html.Br(),
+        'Acceptable zscore ',
+        html.Br(),
         dcc.Input(
             id='extent',
             # placeholder='Extent of standard deviation',
@@ -85,7 +88,7 @@ input_layout = html.Div(
         ),
 
         html.Br(),
-
+        html.Br(),
         html.Div([
             html.Button(id='analyze',
                         n_clicks_timestamp=0,
@@ -118,6 +121,13 @@ graph_layout= html.Div(
     id= 'graph_layout',
     children= [
 
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+        dcc.Link('See standard scores', href='/zscores'),
+        html.Br(),
+        dcc.Link('See summary', href='/summary'),
+        html.Br(),
+
         html.H2('Standard scores of subjects for each region'),
         html.Div([
             dcc.Dropdown(
@@ -132,13 +142,6 @@ graph_layout= html.Div(
 
         dcc.Graph(id='stat-graph'),
 
-        html.Br(),
-        dcc.Link('Go back to inputs', href='/user'),
-        html.Br(),
-        dcc.Link('See standard scores', href='/zscores'),
-        html.Br(),
-        dcc.Link('See summary', href='/summary'),
-
     ],
 
     style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
@@ -148,6 +151,14 @@ graph_layout= html.Div(
 table_layout= html.Div(
     id= 'table_layout',
     children= [
+
+    dcc.Link('Go back to inputs', href='/user'),
+    html.Br(),
+    dcc.Link('Go back to graphs', href='/graphs'),
+    html.Br(),
+    dcc.Link('See summary', href='/summary'),
+    html.Br(),
+
     html.H2('Standard scores of subjects for each region'),
     html.Br(),
     dcc.Store(id='dfscores'),
@@ -176,12 +187,6 @@ table_layout= html.Div(
 
     html.Div(id='table-content'),
 
-    html.Br(),
-    dcc.Link('Go back to inputs', href='/user'),
-    html.Br(),
-    dcc.Link('Go back to graphs', href='/graphs'),
-    html.Br(),
-    dcc.Link('See summary', href='/summary'),
     ],
 
     style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
@@ -192,6 +197,13 @@ summary_layout = html.Div(
     id= 'summary_layout',
     children= [
 
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+        dcc.Link('Go back to graphs', href='/graphs'),
+        html.Br(),
+        dcc.Link('Go back to standard scores', href='/zscores'),
+        html.Br(),
+        html.Br(),
         'Group outliers by: ',
         html.Div([
             dcc.Dropdown(
@@ -224,13 +236,6 @@ summary_layout = html.Div(
             },
 
         ),
-
-        html.Br(),
-        dcc.Link('Go back to inputs', href='/user'),
-        html.Br(),
-        dcc.Link('Go back to graphs', href='/graphs'),
-        html.Br(),
-        dcc.Link('Go back to standard scores', href='/zscores'),
 
     ],
 
@@ -349,13 +354,13 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
             roi_png= pjoin(outDir,f'{region}.png')
             render_roi(region, fsdir, lut, roi_png, method='snapshot')
             roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
+            remove(roi_png)
 
             return 'data:image/png;base64,{}'.format(roi_base64)
 
             # check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
             #                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
-            # TODO delete roi_png
 
     raise PreventUpdate
 
@@ -395,8 +400,7 @@ def update_summary(df, outDir, extent, group_by):
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
 
     summary= pjoin(outDir, f'group-by-{group_by}.csv')
-    if not isfile(summary):
-        dfs.to_csv(summary, index=False)
+    dfs.to_csv(summary, index=False)
 
     chmod(summary, 0o664)
 

@@ -357,7 +357,7 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
                 roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
                 remove(roi_png)
 
-            return 'data:image/png;base64,{}'.format(roi_base64)
+                return 'data:image/png;base64,{}'.format(roi_base64)
 
             # check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
             #                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)

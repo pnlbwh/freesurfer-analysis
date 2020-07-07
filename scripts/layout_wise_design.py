@@ -20,6 +20,8 @@ import logging
 from analyze_stats_graphs import plot_graph, show_table
 from view_roi import load_lut, render_roi
 
+from util import delimiter_dict
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
 # log= logging.getLogger('werkzeug')
@@ -85,6 +87,23 @@ input_layout = html.Div(
             },
             value= 2,
             type= 'number'
+        ),
+        html.Br(),
+        'Delimiter ',
+        html.Br(),
+        dcc.Input(
+            id='delimiter',
+            style={
+                'width': '20%',
+                # 'height': '40px',
+                # 'lineHeight': '40px',
+                'borderWidth': '1px',
+                # 'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                # 'margin': '10px'
+            },
+            value= 'comma'
         ),
 
         html.Br(),
@@ -254,8 +273,8 @@ app.layout = html.Div([
 
 # callback for input_layout
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
-              [Input('csv','contents'), Input('analyze', 'n_clicks')])
-def update_dropdown(raw_contents, analyze):
+              [Input('csv','contents'), Input('delimiter','value'), Input('analyze', 'n_clicks')])
+def update_dropdown(raw_contents, delimiter, analyze):
     # print(analyze)
     if not analyze:
         raise PreventUpdate
@@ -264,7 +283,7 @@ def update_dropdown(raw_contents, analyze):
 
     _, contents = raw_contents.split(',')
     decoded = base64.b64decode(contents)
-    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
 
     subjects = df[df.columns[0]].values
     regions = df.columns.values[1:]

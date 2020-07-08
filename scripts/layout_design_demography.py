@@ -19,6 +19,7 @@ import logging
 
 from analyze_stats_graphs import plot_graph, show_table
 from view_roi import load_lut, render_roi
+from _compare_layout import plot_graph_compare, display_model
 
 from util import delimiter_dict
 
@@ -183,12 +184,15 @@ input_layout = html.Div(
 
         dcc.Store(id='df'),
         dcc.Store(id='subjects'),
+        dcc.Store(id='dfcombined'),
         # other dcc.Store()
 
         html.Div(id='user-inputs'),
 
         html.Br(),
         dcc.Link('See graphs', href='/graphs'),
+        html.Br(),
+        dcc.Link('See corrected graphs', href='/compare'),
         html.Br(),
         dcc.Link('See standard scores', href='/zscores'),
         html.Br(),
@@ -324,11 +328,54 @@ summary_layout = html.Div(
     style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
 )
 
+compare_layout = html.Div(
+    id= 'compare_layout',
+    children= [
+
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+        dcc.Link('See uncorrected graphs', href='/graphs'),
+        html.Br(),
+        html.Br(),
+
+        html.Div([
+            dcc.Dropdown(
+                id='region-compare',
+                # options=[{'label': i, 'value': i} for i in regions if isfile(pjoin(outDir, f'.{i}.pkl'))],
+                # value=regions[0]
+            )
+        ],
+            style={'width': '48%', 'display': 'inline-block'}),
+
+        html.Br(),
+        html.Div([
+            html.Button(id='regress',
+                        n_clicks_timestamp=0,
+                        children='Regress',
+                        title='Run regression analysis')],
+            style={'float': 'center', 'display': 'inline-block'}
+        ),
+
+        html.Br(),
+        'Corrected outliers, superimposed on the uncorrected ones, accounting for standard score of the residuals:',
+        dcc.Graph(id='stat-graph-compare'),
+        'Only corrected outliers accounting for standard score of the residuals can be found at http://localhost:8051',
+        dcc.Graph(id='model-graph'),
+        html.Br(),
+        dcc.Markdown(id='model-summary'),
+        html.Br()
+        ],
+
+    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+
+)
+
+
 
 app.layout = html.Div([
 
     html.Div(id='main-content',
-             children=[input_layout, graph_layout, table_layout, summary_layout]),
+             children=[input_layout, graph_layout, table_layout, summary_layout, compare_layout]),
     dcc.Location(id='url', refresh=False),
     html.Br()
 ])
@@ -358,8 +405,8 @@ app.layout = html.Div([
 
 
 # callback for regression analysis
-@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
-               # Output('user-inputs', 'children')],
+@app.callback([Output('region-compare', 'options'), Output('df', 'data'),
+               Output('subjects','data'), Output('dfcombined', 'data')],
               [Input('csv','contents'), Input('csv','filename'),
                Input('participants','contents'), Input('delimiter','value'),
                Input('outDir', 'value'),
@@ -411,8 +458,32 @@ def update_dropdown(input_contents, filename, parti_contents, delimiter, outDir,
     # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
+    dfcombined= pd.read_csv(f'{outPrefix}_combined.csv')
     # raise (PreventUpdate)
-    return (options, df.to_dict('list'), subjects)
+    return (options, df.to_dict('list'), subjects, dfcombined.to_dict('list'))
+
+
+# callback for compare_layout
+@app.callback(
+    [Output('stat-graph-compare', 'figure'),
+     Output('model-graph', 'figure'),
+     Output('model-summary', 'children')],
+    [Input('dfcombined','data'), Input('df','data'),
+     Input('region-compare', 'value'), Input('extent', 'value'),
+     Input('outDir','value')])
+def update_graph(df, df_resid, region, extent, outDir):
+
+    if not region:
+        raise PreventUpdate
+
+    df= pd.DataFrame(df)
+    df_resid= pd.DataFrame(df_resid)
+
+    fig, _, _ = plot_graph_compare(df, df_resid, region, extent)
+    model, summary = display_model(region, outDir)
+
+
+    return (fig, model, summary)
 
 
 # callback for graph_layout
@@ -552,10 +623,11 @@ def update_summary(df, outDir, extent, group_by):
 
 
 
-@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout']],
+@app.callback([Output(page, 'style') for page in
+                  ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'compare_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(4)]
+    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
@@ -563,7 +635,8 @@ def display_page(pathname):
         display_layout[2] = {'display': 'auto'}
     elif pathname == '/summary':
         display_layout[3] = {'display': 'auto'}
-    # elif pathname == '/user':
+    elif pathname == '/compare':
+        display_layout[4]= {'display': 'auto'}
     else:
         display_layout[0] = {'display': 'auto'}
 

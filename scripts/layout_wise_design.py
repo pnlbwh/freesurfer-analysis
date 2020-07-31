@@ -363,6 +363,9 @@ def show_stats_table(df, activate, outDir, extent):
     meanX= np.mean(X, axis=0)
     ind= np.where(meanX==0)
 
+    # normalizing to avoid md^2 < 0
+    X = X / np.max(X, axis=0)
+
     X= np.delete(X, ind, axis=1)
     meanX= np.delete(meanX, ind)
     covX= np.cov(X, rowvar= False)
@@ -380,7 +383,7 @@ def show_stats_table(df, activate, outDir, extent):
     inliers = abs(zscores) <= extent
 
     for i in range(L):
-        md.loc[i]= subjects[i], zscores[i], '' if inliers[i] else 'x'
+        md.loc[i]= [subjects[i], zscores[i], '' if inliers[i] else 'x']
 
     filename= pjoin(outDir, 'multiv_outliers.csv')
     md.to_csv(filename, index=False)

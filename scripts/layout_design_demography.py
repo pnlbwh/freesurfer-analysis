@@ -209,6 +209,8 @@ graph_layout= html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
+        dcc.Link('See corrected graphs', href='/compare'),
+        html.Br(),
         dcc.Link('See standard scores', href='/zscores'),
         html.Br(),
         dcc.Link('See summary', href='/summary'),
@@ -347,14 +349,14 @@ compare_layout = html.Div(
         ],
             style={'width': '48%', 'display': 'inline-block'}),
 
-        html.Br(),
-        html.Div([
-            html.Button(id='regress',
-                        n_clicks_timestamp=0,
-                        children='Regress',
-                        title='Run regression analysis')],
-            style={'float': 'center', 'display': 'inline-block'}
-        ),
+        # html.Br(),
+        # html.Div([
+        #     html.Button(id='regress',
+        #                 n_clicks_timestamp=0,
+        #                 children='Regress',
+        #                 title='Run regression analysis')],
+        #     style={'float': 'center', 'display': 'inline-block'}
+        # ),
 
         html.Br(),
         'Corrected outliers, superimposed on the uncorrected ones, accounting for standard score of the residuals:',
@@ -397,7 +399,6 @@ app.layout = html.Div([
 #
 #     subjects = df[df.columns[0]].values
 #     regions = df.columns.values[1:]
-#     # do the analysis here
 #     options = [{'label': i, 'value': i} for i in regions]
 #
 #     return (options, df.to_dict('list'), subjects)
@@ -405,7 +406,8 @@ app.layout = html.Div([
 
 
 # callback for regression analysis
-@app.callback([Output('region-compare', 'options'), Output('df', 'data'),
+@app.callback([Output('region', 'options'),
+               Output('region-compare', 'options'), Output('df', 'data'),
                Output('subjects','data'), Output('dfcombined', 'data')],
               [Input('csv','contents'), Input('csv','filename'),
                Input('participants','contents'), Input('delimiter','value'),
@@ -426,41 +428,48 @@ def update_dropdown(input_contents, filename, parti_contents, delimiter, outDir,
     _, contents = input_contents.split(',')
     decoded = base64.b64decode(contents)
     df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
-    summaryCsv= pjoin(outDir, filename)
-    df.to_csv(summaryCsv, index= False)
-
-    _, contents = parti_contents.split(',')
-    decoded = base64.b64decode(contents)
-    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
-    partiCsv= pjoin(outDir, '.participants.csv')
-    df.to_csv(partiCsv, index= False)
-
-    exe= pjoin(SCRIPTDIR, 'combine_demography.py')
-    cmd= f'python {exe} -i {summaryCsv} -o {outDir} -p {partiCsv} -c "{control}"'
-    check_call(cmd, shell=True)
 
 
-    # python scripts\correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age
-    # -p participants.csv -o dem_corrected/
-    prefix= filename.split('.csv')[0]
-    outPrefix= pjoin(outDir, prefix)
-    exe= pjoin(SCRIPTDIR, 'correct_for_demography.py')
-    cmd= f'python {exe} -i {outPrefix}_combined.csv -c {outPrefix}_control.csv -p {partiCsv} -e "{effect}" ' \
-         f'-o {outDir}'
-    check_call(cmd, shell=True)
+    if parti_contents:
+        summaryCsv= pjoin(outDir, filename)
+        df.to_csv(summaryCsv, index= False)
 
-    exog = '_'.join(effect.split('+'))
-    residuals= f'{outPrefix}_{exog}_residuals.csv'
-    df= pd.read_csv(residuals)
+        _, contents = parti_contents.split(',')
+        decoded = base64.b64decode(contents)
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+        partiCsv= pjoin(outDir, '.participants.csv')
+        df.to_csv(partiCsv, index= False)
+
+        exe= pjoin(SCRIPTDIR, 'combine_demography.py')
+        cmd= f'python {exe} -i {summaryCsv} -o {outDir} -p {partiCsv} -c "{control}"'
+        check_call(cmd, shell=True)
+
+
+        # python scripts\correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age
+        # -p participants.csv -o dem_corrected/
+        prefix= filename.split('.csv')[0]
+        outPrefix= pjoin(outDir, prefix)
+        exe= pjoin(SCRIPTDIR, 'correct_for_demography.py')
+        cmd= f'python {exe} -i {outPrefix}_combined.csv -c {outPrefix}_control.csv -p {partiCsv} -e "{effect}" ' \
+             f'-o {outDir}'
+        check_call(cmd, shell=True)
+
+        exog = '_'.join(effect.split('+'))
+        residuals= f'{outPrefix}_{exog}_residuals.csv'
+        df= pd.read_csv(residuals)
+
+        dfcombined= pd.read_csv(f'{outPrefix}_combined.csv')
+
 
     subjects = df[df.columns[0]].values
     regions = df.columns.values[1:]
-    # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
-    dfcombined= pd.read_csv(f'{outPrefix}_combined.csv')
-    # raise (PreventUpdate)
-    return (options, df.to_dict('list'), subjects, dfcombined.to_dict('list'))
+
+    if parti_contents:
+        return (options, options, df.to_dict('list'), subjects, dfcombined.to_dict('list'))
+    else:
+        return (options, options, df.to_dict('list'), subjects, df.to_dict('list'))
 
 
 # callback for compare_layout
@@ -489,7 +498,7 @@ def update_graph(df, df_resid, region, extent, outDir):
 # callback for graph_layout
 @app.callback(
     Output('stat-graph', 'figure'),
-    [Input('df','data'), Input('region','value'), Input('extent','value')])
+    [Input('dfcombined','data'), Input('region','value'), Input('extent','value')])
 def update_graph(df, region, extent):
 
     if not region:
@@ -509,6 +518,7 @@ def show_stats_table(df, activate, outDir):
     if not activate:
         raise PreventUpdate
 
+    # TODO omit this block, it is already being done in callback for regression analysis
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True, mode=0o775)

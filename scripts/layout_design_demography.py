@@ -421,6 +421,7 @@ def update_dropdown(input_contents, filename, parti_contents, delimiter, outDir,
 
     # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
 
+    # this block is also necessary in table layout since user may want to analyze raw summary only w/o demographics
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True, mode=0o775)
@@ -518,7 +519,7 @@ def show_stats_table(df, activate, outDir):
     if not activate:
         raise PreventUpdate
 
-    # TODO omit this block, it is already being done in callback for regression analysis
+    # this block is also necessary in regression analysis since user may want to see corrected graphs first
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True, mode=0o775)

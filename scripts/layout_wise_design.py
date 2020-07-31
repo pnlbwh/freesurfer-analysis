@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
 from os import makedirs, getenv, chmod, remove
 from subprocess import check_call
+from scipy.spatial.distance import mahalanobis
 
 import pandas as pd
 import numpy as np
@@ -130,6 +131,8 @@ input_layout = html.Div(
         dcc.Link('See standard scores', href='/zscores'),
         html.Br(),
         dcc.Link('See summary', href='/summary'),
+        html.Br(),
+        dcc.Link('See multivariate', href='/multiv'),
 
     ],
     style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
@@ -262,10 +265,52 @@ summary_layout = html.Div(
 )
 
 
+multiv_layout = html.Div(
+    id= 'multiv_layout',
+    children= [
+
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+
+        html.Div([
+            html.Button(id='multiv-button',
+                        n_clicks_timestamp=0,
+                        children='Perform multivariate analysis',
+                        title='Analyze summary to detect outliers')],
+            style={'float': 'center', 'display': 'inline-block'}),
+
+        DataTable(
+            id='multiv-summary',
+            filter_action='native',
+            sort_action='native',
+
+            style_data_conditional=[{
+                'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(240, 240, 240)'
+            }],
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap'
+            },
+
+        ),
+
+    ],
+
+    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+)
+
+
 app.layout = html.Div([
 
     html.Div(id='main-content',
-             children=[input_layout, graph_layout, table_layout, summary_layout]),
+             children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout]),
     dcc.Location(id='url', refresh=False),
     html.Br()
 ])
@@ -291,6 +336,57 @@ def update_dropdown(raw_contents, delimiter, analyze):
     options = [{'label': i, 'value': i} for i in regions]
 
     return (options, df.to_dict('list'), subjects)
+
+
+# callback for multiv_layout
+@app.callback([Output('multiv-summary', 'data'), Output('multiv-summary', 'columns')],
+              [Input('df','data'), Input('multiv-button','n_clicks'),
+               Input('outDir', 'value'), Input('extent','value')])
+def show_stats_table(df, activate, outDir, extent):
+
+    if not activate:
+        raise PreventUpdate
+
+    outDir= abspath(outDir)
+    if not isdir(outDir):
+        makedirs(outDir, exist_ok= True, mode=0o775)
+
+    df= pd.DataFrame(df)
+    regions = df.columns.values[1:]
+    subjects = df[df.columns[0]].values
+    L= len(subjects)
+
+    columns= ['Subjects', 'Mahalonobis', 'Outlier']
+    md= pd.DataFrame(columns=columns)
+
+    X= df.values
+    meanX= np.mean(X, axis=0)
+    ind= np.where(meanX==0)
+
+    X= np.delete(X, ind, axis=1)
+    meanX= np.delete(meanX, ind)
+    covX= np.cov(X, rowvar= False)
+    icovX= np.linalg.inv(covX)
+    MD= np.zeros((L,))
+    for i in range(L):
+        x= df.loc[i].values
+        x= np.delete(x, ind)
+
+        MD[i]= mahalanobis(x, meanX, icovX)
+
+    val_mean= MD[~np.isnan(MD)].mean()
+    val_std= MD[~np.isnan(MD)].std()
+    zscores = np.round((MD - val_mean) / val_std, 4)
+    inliers = abs(zscores) <= extent
+
+    for i in range(L):
+        md.loc[i]= subjects[i], zscores[i], '' if inliers[i] else 'x'
+
+    filename= pjoin(outDir, 'multiv_outliers.csv')
+    md.to_csv(filename, index=False)
+    chmod(filename,0o664)
+
+    return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns]]
 
 
 # callback for graph_layout
@@ -428,10 +524,10 @@ def update_summary(df, outDir, extent, group_by):
 
 
 
-@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout']],
+@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'multiv_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(4)]
+    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
@@ -439,6 +535,8 @@ def display_page(pathname):
         display_layout[2] = {'display': 'auto'}
     elif pathname == '/summary':
         display_layout[3] = {'display': 'auto'}
+    elif pathname == '/multiv':
+        display_layout[4] = {'display': 'auto'}
     # elif pathname == '/user':
     else:
         display_layout[0] = {'display': 'auto'}

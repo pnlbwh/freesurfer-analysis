@@ -12,6 +12,7 @@ from os.path import isfile, isdir, abspath, join as pjoin, dirname
 from os import makedirs, getenv, chmod, remove
 from subprocess import check_call
 from scipy.spatial.distance import mahalanobis
+from scipy.stats import scoreatpercentile
 
 import pandas as pd
 import numpy as np
@@ -363,11 +364,12 @@ def show_stats_table(df, activate, outDir, extent):
     meanX= np.mean(X, axis=0)
     ind= np.where(meanX==0)
 
+    X= np.delete(X, ind, axis=1)
+    meanX= np.delete(meanX, ind)
+
     # normalizing to avoid md^2 < 0
     X = X / np.max(X, axis=0)
 
-    X= np.delete(X, ind, axis=1)
-    meanX= np.delete(meanX, ind)
     covX= np.cov(X, rowvar= False)
     icovX= np.linalg.inv(covX)
     MD= np.zeros((L,))
@@ -377,13 +379,18 @@ def show_stats_table(df, activate, outDir, extent):
 
         MD[i]= mahalanobis(x, meanX, icovX)
 
-    val_mean= MD[~np.isnan(MD)].mean()
-    val_std= MD[~np.isnan(MD)].std()
-    zscores = np.round((MD - val_mean) / val_std, 4)
-    inliers = abs(zscores) <= extent
+    # val_mean= MD[~np.isnan(MD)].mean()
+    # val_std= MD[~np.isnan(MD)].std()
+    # zscores = np.round((MD - val_mean) / val_std, 4)
+    # inliers = abs(zscores) <= extent
+
+    h_thresh= scoreatpercentile(MD, 97)
+    l_thresh = scoreatpercentile(MD, 3)
+    inliers= np.logical_and(MD <= h_thresh, MD >= l_thresh)
 
     for i in range(L):
-        md.loc[i]= [subjects[i], zscores[i], '' if inliers[i] else 'x']
+        md.loc[i] = [subjects[i], MD[i], '' if inliers[i] else 'x']
+        # md.loc[i]= [subjects[i], zscores[i], '' if inliers[i] else 'x']
 
     filename= pjoin(outDir, 'multiv_outliers.csv')
     md.to_csv(filename, index=False)

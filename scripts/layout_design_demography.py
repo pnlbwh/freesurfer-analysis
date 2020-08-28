@@ -361,7 +361,6 @@ compare_layout = html.Div(
         html.Br(),
         'Corrected outliers, superimposed on the uncorrected ones, accounting for standard score of the residuals:',
         dcc.Graph(id='stat-graph-compare'),
-        'Only corrected outliers accounting for standard score of the residuals can be found at http://localhost:8051',
         dcc.Graph(id='model-graph'),
         html.Br(),
         dcc.Markdown(id='model-summary'),

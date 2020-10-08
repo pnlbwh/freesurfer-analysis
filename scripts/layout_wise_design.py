@@ -9,23 +9,31 @@ from dash_table import DataTable
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs, getenv, chmod, remove
+from os import makedirs, getenv, remove
 from subprocess import check_call
 from scipy.spatial.distance import mahalanobis
 from scipy.stats import scoreatpercentile
+from sklearn.ensemble import IsolationForest
 
 import pandas as pd
 import numpy as np
 import argparse
 import logging
 
+from subprocess import check_call
+
 from analyze_stats_graphs import plot_graph, show_table
 from view_roi import load_lut, render_roi
 
 from util import delimiter_dict
 
+PERCENT_LOW=3
+PERCENT_HIGH=97
+CONTAMIN=.05
+
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True,
+                url_base_pathname='/dash/')
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
@@ -33,7 +41,7 @@ input_layout = html.Div(
     id= 'input_layout',
     children= [
 
-        'Summary csv file',
+        'Text file with rows for subjects and columns for features ',
         html.Br(),
         dcc.Upload(
             id='csv',
@@ -57,7 +65,7 @@ input_layout = html.Div(
         html.Br(),
         dcc.Input(
             id='outDir',
-            placeholder='Output directory',
+            placeholder='Output directory ',
             style={
                 'width': '20%',
                 # 'height': '40px',
@@ -113,8 +121,8 @@ input_layout = html.Div(
         html.Div([
             html.Button(id='analyze',
                         n_clicks_timestamp=0,
-                        children='Analyze summary',
-                        title='Analyze summary to detect outliers')],
+                        children='Analyze',
+                        title='Analyze text file to detect outliers')],
             style={'float': 'center', 'display': 'inline-block'}),
 
 
@@ -127,16 +135,16 @@ input_layout = html.Div(
         html.Div(id='user-inputs'),
 
         html.Br(),
-        dcc.Link('See graphs', href='/graphs'),
+        dcc.Link('See outliers summary', href='/summary'),
         html.Br(),
-        dcc.Link('See standard scores', href='/zscores'),
+        dcc.Link('See outliers in graphs', href='/graphs'),
         html.Br(),
-        dcc.Link('See summary', href='/summary'),
+        dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
-        dcc.Link('See multivariate', href='/multiv'),
+        dcc.Link('Perform multivariate analysis', href='/multivar'),
 
     ],
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -146,9 +154,9 @@ graph_layout= html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See standard scores', href='/zscores'),
+        dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
-        dcc.Link('See summary', href='/summary'),
+        dcc.Link('See outliers summary', href='/summary'),
         html.Br(),
 
         html.H2('Standard scores of subjects for each region'),
@@ -167,7 +175,7 @@ graph_layout= html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -177,12 +185,12 @@ table_layout= html.Div(
 
     dcc.Link('Go back to inputs', href='/user'),
     html.Br(),
-    dcc.Link('Go back to graphs', href='/graphs'),
+    dcc.Link('See outliers in graphs', href='/graphs'),
     html.Br(),
-    dcc.Link('See summary', href='/summary'),
+    dcc.Link('See outliers summary', href='/summary'),
     html.Br(),
 
-    html.H2('Standard scores of subjects for each region'),
+    html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
     dcc.Input(
@@ -212,7 +220,7 @@ table_layout= html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -222,10 +230,9 @@ summary_layout = html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('Go back to graphs', href='/graphs'),
+        dcc.Link('See outliers in graphs', href='/graphs'),
         html.Br(),
-        dcc.Link('Go back to standard scores', href='/zscores'),
-        html.Br(),
+        dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
         'Group outliers by: ',
         html.Div([
@@ -260,9 +267,11 @@ summary_layout = html.Div(
 
         ),
 
+        dcc.Store(id='already-done')
+
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -277,7 +286,7 @@ multiv_layout = html.Div(
             html.Button(id='multiv-button',
                         n_clicks_timestamp=0,
                         children='Perform multivariate analysis',
-                        title='Analyze summary to detect outliers')],
+                        title='Perform multivariate analysis over all features together')],
             style={'float': 'center', 'display': 'inline-block'}),
 
         DataTable(
@@ -288,12 +297,19 @@ multiv_layout = html.Div(
             style_data_conditional=[{
                 'if': {'row_index': 'odd'},
                 'backgroundColor': 'rgb(240, 240, 240)'
-            }],
+            }]+ [{
+                    'if': {
+                        'filter_query': f'{{Outlier}} eq X',
+                    },
+                    'backgroundColor': 'red',
+                    'color': 'black',
+                    'fontWeight': 'bold'
+                }],
 
             style_header={
-                'backgroundColor': 'rgb(230, 230, 230)',
-                'fontWeight': 'bold'
-            },
+                        'backgroundColor': 'rgb(230, 230, 230)',
+                        'fontWeight': 'bold'
+                    },
 
             style_cell={
                 'textAlign': 'left',
@@ -304,7 +320,7 @@ multiv_layout = html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -317,26 +333,95 @@ app.layout = html.Div([
 ])
 
 
-# callback for input_layout
-@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
-              [Input('csv','contents'), Input('delimiter','value'), Input('analyze', 'n_clicks')])
-def update_dropdown(raw_contents, delimiter, analyze):
-    # print(analyze)
+
+@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
+               Output('summary', 'data'), Output('summary', 'columns')],
+              [Input('csv','contents'), Input('delimiter','value'),
+               Input('outDir', 'value'), Input('extent', 'value'),
+               Input('analyze', 'n_clicks'), Input('group-by', 'value')])
+def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
+
     if not analyze:
         raise PreventUpdate
 
-    # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
-
     _, contents = raw_contents.split(',')
     decoded = base64.b64decode(contents)
-    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+    df_raw = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
 
-    subjects = df[df.columns[0]].values
-    regions = df.columns.values[1:]
+    subjects = df_raw[df_raw.columns[0]].values
+    regions = df_raw.columns.values[1:]
     # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
-    return (options, df.to_dict('list'), subjects)
+    filename= pjoin(outDir, 'outliers.csv')
+    if isfile(filename):
+        df_inliers= pd.read_csv(filename)
+    else:
+        df_inliers= df_raw.copy()
+        for column_name in regions:
+            print(column_name)
+            _, inliers, zscores= plot_graph(df_raw, column_name)
+
+            # write outlier summary
+            df_inliers[column_name] = zscores
+
+
+        df_inliers.to_csv(filename, index=False)
+
+
+    df= df_inliers.copy()
+    if group_by == 'subjects':
+        dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
+        columns = [{'name': i,
+                    'id': i,
+                    'hideable': True,
+                    } for i in dfs.columns]
+
+        for i in range(len(df)):
+            outliers = df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
+            dfs.loc[i] = [df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
+
+    else:
+        dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
+        columns = [{'name': i,
+                    'id': i,
+                    'hideable': True,
+                    } for i in dfs.columns]
+
+        for i, region in enumerate(df.columns[1:]):
+            outliers = df[df.columns[0]].values[abs(df[region]) > extent]
+            dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
+
+    summary = pjoin(outDir, f'group-by-{group_by}.csv')
+    dfs.to_csv(summary, index=False)
+
+
+    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns)
+
+
+
+
+# callback for input_layout
+# @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
+#               [Input('csv','contents'), Input('delimiter','value'),
+#                Input('analyze', 'n_clicks')])
+# def update_dropdown(raw_contents, delimiter, analyze):
+#
+#     if not analyze:
+#         raise PreventUpdate
+#
+#     # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
+#
+#     _, contents = raw_contents.split(',')
+#     decoded = base64.b64decode(contents)
+#     df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+#
+#     subjects = df[df.columns[0]].values
+#     regions = df.columns.values[1:]
+#     # do the analysis here
+#     options = [{'label': i, 'value': i} for i in regions]
+#
+#     return (options, df.to_dict('list'), subjects)
 
 
 # callback for multiv_layout
@@ -350,14 +435,14 @@ def show_stats_table(df, activate, outDir, extent):
 
     outDir= abspath(outDir)
     if not isdir(outDir):
-        makedirs(outDir, exist_ok= True, mode=0o775)
+        makedirs(outDir, exist_ok= True)
 
     df= pd.DataFrame(df)
     regions = df.columns.values[1:]
     subjects = df[df.columns[0]].values
     L= len(subjects)
 
-    columns= ['Subjects', 'Mahalonobis', 'Outlier']
+    columns= ['Subjects', 'Mahalonobis/IsoForest', 'Outlier']
     md= pd.DataFrame(columns=columns)
 
     X= df.values
@@ -367,34 +452,41 @@ def show_stats_table(df, activate, outDir, extent):
     X= np.delete(X, ind, axis=1)
     meanX= np.delete(meanX, ind)
 
-    # normalizing to avoid md^2 < 0
+    # Mahalanobis distance block =================================
+    # Normalizing to avoid md^2 < 0
     X = X / np.max(X, axis=0)
-
     covX= np.cov(X, rowvar= False)
     icovX= np.linalg.inv(covX)
     MD= np.zeros((L,))
     for i in range(L):
-        x= df.loc[i].values
-        x= np.delete(x, ind)
-
+        x= X[i,: ]
         MD[i]= mahalanobis(x, meanX, icovX)
 
-    # val_mean= MD[~np.isnan(MD)].mean()
-    # val_std= MD[~np.isnan(MD)].std()
-    # zscores = np.round((MD - val_mean) / val_std, 4)
-    # inliers = abs(zscores) <= extent
 
-    h_thresh= scoreatpercentile(MD, 97)
-    l_thresh = scoreatpercentile(MD, 3)
-    inliers= np.logical_and(MD <= h_thresh, MD >= l_thresh)
+    # IsolationForest block =================================
+    rng = np.random.RandomState(123456)
+    num_samples = len(subjects)
+    iso_f = IsolationForest(max_samples=num_samples,
+                            contamination=CONTAMIN,
+                            random_state=rng)
+    iso_f.fit(df)
+    pred_scores = iso_f.decision_function(df)
+
+
+    # Decision block
+    measure= pred_scores
+    h_thresh= scoreatpercentile(measure, PERCENT_HIGH)
+    l_thresh = scoreatpercentile(measure, PERCENT_LOW)
+    inliers= np.logical_and(measure <= h_thresh, measure >= l_thresh)
 
     for i in range(L):
-        md.loc[i] = [subjects[i], MD[i], '' if inliers[i] else 'x']
-        # md.loc[i]= [subjects[i], zscores[i], '' if inliers[i] else 'x']
+        md.loc[i] = [subjects[i], round(measure[i], 3), '' if inliers[i] else 'X']
+        if ~inliers[i]:
+            pass
+            # md.loc[i] = [subjects[i], round(measure[i],3), 'X']
 
     filename= pjoin(outDir, 'multiv_outliers.csv')
     md.to_csv(filename, index=False)
-    chmod(filename,0o664)
 
     return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns]]
 
@@ -422,9 +514,11 @@ def show_stats_table(df, activate, outDir):
     if not activate:
         raise PreventUpdate
 
+    # ENH show a dialogue box warning about duration
+
     outDir= abspath(outDir)
     if not isdir(outDir):
-        makedirs(outDir, exist_ok= True, mode=0o775)
+        makedirs(outDir, exist_ok= True)
 
     # subject column is lost in the following conversion
     df= pd.DataFrame(df)
@@ -432,18 +526,20 @@ def show_stats_table(df, activate, outDir):
     regions = df.columns.values[1:]
 
     # generate all figures
-    df_inliers= df.copy()
+    filename = pjoin(outDir, 'outliers.csv')
+    if isfile(filename):
+        df_inliers= pd.read_csv(filename)
 
-    for column_name in regions:
-        print(column_name)
-        _, inliers, zscores= plot_graph(df, column_name)
+    else:
+        df_inliers = df.copy()
+        for column_name in regions:
+            print(column_name)
+            _, inliers, zscores= plot_graph(df, column_name)
 
-        # write outlier summary
-        df_inliers[column_name] = zscores
+            # write outlier summary
+            df_inliers[column_name] = zscores
 
-    filename= pjoin(outDir, 'outliers.csv')
-    df_inliers.to_csv(filename, index=False)
-    chmod(filename,0o664)
+        df_inliers.to_csv(filename, index=False)
 
     layout= show_table(df_inliers)
 
@@ -491,53 +587,52 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
     raise PreventUpdate
 
 
-# callback for summary_layout
-@app.callback([Output('summary', 'data'),
-               Output('summary', 'columns')],
-              [Input('dfscores','data'), Input('outDir', 'value'),
-               Input('extent','value'), Input('group-by', 'value')])
-def update_summary(df, outDir, extent, group_by):
 
-    if not df:
-        raise PreventUpdate
-
-    df= pd.DataFrame(df)
-
-    if group_by=='subjects':
-        dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
-        columns = [{'name': i,
-                    'id': i,
-                    'hideable': True,
-                    } for i in dfs.columns]
-
-        for i in range(len(df)):
-            outliers=df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
-            dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
-
-    else:
-        dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
-        columns = [{'name': i,
-                    'id': i,
-                    'hideable': True,
-                    } for i in dfs.columns]
-
-        for i,region in enumerate(df.columns[1:]):
-            outliers= df[df.columns[0]].values[abs(df[region]) > extent]
-            dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
-
-    summary= pjoin(outDir, f'group-by-{group_by}.csv')
-    dfs.to_csv(summary, index=False)
-
-    chmod(summary, 0o664)
-
-    return [dfs.to_dict('records'), columns]
+# # callback for summary_layout
+# @app.callback([Output('summary', 'data'),
+#                Output('summary', 'columns')],
+#               [Input('dfscores','data'), Input('outDir', 'value'),
+#                Input('extent','value'), Input('group-by', 'value')])
+# def update_summary(df, outDir, extent, group_by):
+#
+#     if not df:
+#         raise PreventUpdate
+#
+#     df= pd.DataFrame(df)
+#
+#     if group_by=='subjects':
+#         dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
+#         columns = [{'name': i,
+#                     'id': i,
+#                     'hideable': True,
+#                     } for i in dfs.columns]
+#
+#         for i in range(len(df)):
+#             outliers=df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
+#             dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
+#
+#     else:
+#         dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
+#         columns = [{'name': i,
+#                     'id': i,
+#                     'hideable': True,
+#                     } for i in dfs.columns]
+#
+#         for i,region in enumerate(df.columns[1:]):
+#             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
+#             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
+#
+#     summary= pjoin(outDir, f'group-by-{group_by}.csv')
+#     dfs.to_csv(summary, index=False)
+#
+#     return [dfs.to_dict('records'), columns]
 
 
 
 @app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'multiv_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
+    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
@@ -545,9 +640,8 @@ def display_page(pathname):
         display_layout[2] = {'display': 'auto'}
     elif pathname == '/summary':
         display_layout[3] = {'display': 'auto'}
-    elif pathname == '/multiv':
+    elif pathname == '/multivar':
         display_layout[4] = {'display': 'auto'}
-    # elif pathname == '/user':
     else:
         display_layout[0] = {'display': 'auto'}
 
@@ -555,4 +649,4 @@ def display_page(pathname):
 
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=8050, host='localhost')
+    app.run_server(debug=True, port=8051, host='localhost')

@@ -199,7 +199,7 @@ input_layout = html.Div(
         dcc.Link('See summary', href='/summary'),
 
     ],
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -232,7 +232,7 @@ graph_layout= html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -277,7 +277,7 @@ table_layout= html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 
@@ -327,7 +327,7 @@ summary_layout = html.Div(
 
     ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 )
 
 compare_layout = html.Div(
@@ -367,7 +367,7 @@ compare_layout = html.Div(
         html.Br()
         ],
 
-    style={'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'}
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
 
 )
 
@@ -637,7 +637,7 @@ def update_summary(df, outDir, extent, group_by):
                   ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'compare_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'line-height': '0', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
+    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}

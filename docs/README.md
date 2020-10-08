@@ -23,7 +23,8 @@ Potential applications include [TBSS](https://github.com/pnlbwh/TBSS/blob/master
 
 If the package is useful in your research, please cite as below:
 
-Billah, Tashrif; Bouix; Sylvain; **TBD**, https://github.com/pnlbwh/freesurfer-analysis, 2020, DOI: 10.5281/zenodo.3762476
+Billah, Tashrif; Bouix; Sylvain; *FreeSurfer outlier analysis tool*, https://github.com/pnlbwh/freesurfer-analysis, 2020, 
+DOI: 10.5281/zenodo.3762476
 
 # Installation
 

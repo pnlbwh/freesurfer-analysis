@@ -8,8 +8,8 @@ from statsmodels.graphics.gofplots import qqplot
 
 extent= 2
 # leave out total 1% data from lower and higher tails
-PERCENT_LOW=1
-PERCENT_HIGH=99
+PERCENT_LOW=0
+PERCENT_HIGH=80
 
 # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
 # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\aparcstats_lh.csv')
@@ -57,7 +57,7 @@ ind= np.logical_or(d2<lt, d2>ht)
 print(subjects[ind])
 
 # observed probabilities/percentiles
- # np.sort(MD**2)
+# np.sort(MD**2)
 # po, bins= np.histogram(d2, bins=round(L*0.10), density=True)
 po= np.percentile(d2,range(100))
 

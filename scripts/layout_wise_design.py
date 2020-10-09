@@ -125,6 +125,11 @@ input_layout = html.Div(
                         title='Analyze text file to detect outliers')],
             style={'float': 'center', 'display': 'inline-block'}),
 
+        dcc.Loading(children=html.Div(id='zscore-computing')),
+        # dcc.ConfirmDialog(
+        #     id='zscore-done',
+        #     message='Analysis complete, you can browse through the summary now!',
+        # ),
 
         # Other dcc.Input()
 
@@ -216,6 +221,7 @@ table_layout= html.Div(
         style={'float': 'center', 'display': 'inline-block'}
     ),
 
+    dcc.Loading(children=html.Div(id='table-generating')),
     html.Div(id='table-content'),
 
     ],
@@ -289,6 +295,9 @@ multiv_layout = html.Div(
                         title='Perform multivariate analysis over all features together')],
             style={'float': 'center', 'display': 'inline-block'}),
 
+        html.Br(),
+        dcc.Loading(children=html.Div(id='isof-calculating')),
+
         DataTable(
             id='multiv-summary',
             filter_action='native',
@@ -335,7 +344,8 @@ app.layout = html.Div([
 
 
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
-               Output('summary', 'data'), Output('summary', 'columns')],
+               Output('summary', 'data'), Output('summary', 'columns'),
+               Output('zscore-computing', 'children')],
               [Input('csv','contents'), Input('delimiter','value'),
                Input('outDir', 'value'), Input('extent', 'value'),
                Input('analyze', 'n_clicks'), Input('group-by', 'value')])
@@ -396,7 +406,7 @@ def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
     dfs.to_csv(summary, index=False)
 
 
-    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns)
+    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns, True)
 
 
 
@@ -425,7 +435,8 @@ def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
 
 
 # callback for multiv_layout
-@app.callback([Output('multiv-summary', 'data'), Output('multiv-summary', 'columns')],
+@app.callback([Output('multiv-summary', 'data'), Output('multiv-summary', 'columns'),
+               Output('isof-calculating', 'children')],
               [Input('df','data'), Input('multiv-button','n_clicks'),
                Input('outDir', 'value'), Input('extent','value')])
 def show_stats_table(df, activate, outDir, extent):
@@ -488,7 +499,7 @@ def show_stats_table(df, activate, outDir, extent):
     filename= pjoin(outDir, 'multiv_outliers.csv')
     md.to_csv(filename, index=False)
 
-    return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns]]
+    return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
 
 
 # callback for graph_layout
@@ -506,7 +517,7 @@ def update_graph(df, region, extent):
 
 
 # callback for table_layout
-@app.callback([Output('table-content', 'children'), Output('dfscores','data')],
+@app.callback([Output('table-content', 'children'), Output('dfscores','data'), Output('table-generating', 'children')],
               [Input('df','data'),
                Input('gen-table','n_clicks'), Input('outDir', 'value')])
 def show_stats_table(df, activate, outDir):
@@ -543,11 +554,11 @@ def show_stats_table(df, activate, outDir):
 
     layout= show_table(df_inliers)
 
-    return (layout, df_inliers.to_dict('list'))
+    return (layout, df_inliers.to_dict('list'), True)
 
 
 # callback within table_layout
-@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('roi-loading', 'children')],
+@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('table-loading', 'children')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),

@@ -75,6 +75,7 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
     roi= (seg.get_fdata()==label)*label
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
 
+    cmd = ''
     if method=='snapshot':
         plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region, output_file= output_file)
         # pyplot.show()
@@ -119,13 +120,19 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
             # show aseg
             # background brain.mgz
             # foreground roi.mgz and aseg.mgz
-            check_call([f'freeview -v {brain_mgh} '
-                        f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
-                        f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+            # check_call([f'freeview -v {brain_mgh} '
+            #             f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
+            #             f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
+            cmd= ' '.join([f'freeview -v {brain_mgh} '
+                           f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
+                           f'{seg_mgh}:colormap=lut:opacity={OPACITY}'])
+            print(cmd)
 
 
     close(froi)
     remove(roi_mgh)
+
+    return cmd
 
 if __name__=='__main__':
     # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'

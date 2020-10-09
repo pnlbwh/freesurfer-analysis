@@ -572,15 +572,16 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
             region= temp['column_id']
             roi_png= pjoin(outDir,f'{region}.png')
-            cmd= render_roi(region, fsdir, lut, roi_png, view_type)
+            cmd= render_roi(region, fsdir, lut, outDir, view_type)
             if view_type=='snapshot':
                 roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
-                remove(roi_png)
+                # remove(roi_png)
 
                 return ['data:image/png;base64,{}'.format(roi_base64),None,True]
 
             else:
-                return [None,cmd,True]
+                msg= ['Execute the following command in a terminal to see 3D rendering', html.Br(), cmd]
+                return [None,msg,True]
 
 
 

@@ -22,7 +22,7 @@ import logging
 
 from subprocess import check_call
 
-from analyze_stats_graphs import plot_graph, show_table
+from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
 
 from util import delimiter_dict
@@ -221,7 +221,7 @@ table_layout= html.Div(
         style={'float': 'center', 'display': 'inline-block'}
     ),
 
-    dcc.Loading(children=html.Div(id='table-generating')),
+    dcc.Loading(children=html.Div(id='table-loading')),
     html.Div(id='table-content'),
 
     ],
@@ -517,7 +517,7 @@ def update_graph(df, region, extent):
 
 
 # callback for table_layout
-@app.callback([Output('table-content', 'children'), Output('dfscores','data'), Output('table-generating', 'children')],
+@app.callback([Output('table-content', 'children'), Output('dfscores','data'), Output('table-loading', 'children')],
               [Input('df','data'),
                Input('gen-table','n_clicks'), Input('outDir', 'value')])
 def show_stats_table(df, activate, outDir):
@@ -558,7 +558,7 @@ def show_stats_table(df, activate, outDir):
 
 
 # callback within table_layout
-@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('table-loading', 'children')],
+@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('roi-loading', 'children')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),

@@ -26,9 +26,6 @@ app= dash.Dash(__name__, external_stylesheets=external_stylesheets)
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
-# df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
-# regions = df.columns.values[1:]
-
 
 def plot_graph(df, region, NUM_STD=2):
     '''
@@ -167,17 +164,7 @@ def show_table(df, NUM_STD=2):
         dcc.Loading(children=html.Div(id='roi-loading')),
         html.Br(),
         html.Img(id='roi'),
-        html.Div(id='cmd',
-                 style= {
-                'font-family': 'Georgia',
-                'color': 'blue',
-                'border': 'red',
-                'border-style': 'dotted',
-                'width': 'fit-content',
-                'padding-left': '30px',
-                'padding-right': '30px'
-            },
-        ),
+        html.Div(id='cmd'),
         html.Br(),
         DataTable(
             id='table',

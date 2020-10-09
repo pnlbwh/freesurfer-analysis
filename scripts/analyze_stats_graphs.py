@@ -164,7 +164,10 @@ def show_table(df, NUM_STD=2):
             style={'width': '20%', }),
         html.Br(),
 
+        dcc.Loading(children=html.Div(id='roi-loading')),
+        html.Br(),
         html.Img(id='roi'),
+        html.Div(id='cmd'),
         html.Br(),
         DataTable(
             id='table',

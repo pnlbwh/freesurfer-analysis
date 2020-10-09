@@ -126,10 +126,7 @@ input_layout = html.Div(
             style={'float': 'center', 'display': 'inline-block'}),
 
         dcc.Loading(children=html.Div(id='zscore-computing')),
-        # dcc.ConfirmDialog(
-        #     id='zscore-done',
-        #     message='Analysis complete, you can browse through the summary now!',
-        # ),
+        html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
 
         # Other dcc.Input()
 
@@ -345,7 +342,7 @@ app.layout = html.Div([
 
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
                Output('summary', 'data'), Output('summary', 'columns'),
-               Output('zscore-computing', 'children')],
+               Output('zscore-computing', 'children'), Output('analyze-status', 'style')],
               [Input('csv','contents'), Input('delimiter','value'),
                Input('outDir', 'value'), Input('extent', 'value'),
                Input('analyze', 'n_clicks'), Input('group-by', 'value')])
@@ -406,7 +403,7 @@ def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
     dfs.to_csv(summary, index=False)
 
 
-    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns, True)
+    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns, True, {'display': 'block'})
 
 
 

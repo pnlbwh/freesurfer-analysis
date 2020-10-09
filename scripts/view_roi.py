@@ -32,7 +32,7 @@ def load_lut(lut):
 
     return lut_colors
 
-def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
+def render_roi(table_header, fsdir, lut, outDir, method='snapshot'):
 
     # define files according to FreeSurfer structure
     brain_mgh= pjoin(fsdir, 'mri/brain.mgz')
@@ -51,7 +51,7 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
         seg_mgh = pjoin(fsdir, 'mri/aseg.mgz')
         cortex= False
 
-    froi, roi_mgh= mkstemp(suffix='.mgz', prefix=region+'-')
+    roi_mgh= pjoin(outDir, region+'.mgz')
 
 
     invalid= True
@@ -77,7 +77,8 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
 
     cmd = ''
     if method=='snapshot':
-        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region, output_file= output_file)
+        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
+                 output_file= pjoin(outDir, region+'.png'))
         # pyplot.show()
 
 
@@ -125,12 +126,11 @@ def render_roi(table_header, fsdir, lut, output_file, method='snapshot'):
             #             f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
             cmd= ' '.join([f'freeview -v {brain_mgh} '
                            f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
-                           f'{seg_mgh}:colormap=lut:opacity={OPACITY}'])
+                           f'{seg_mgh}:colormap=lut:opacity={OPACITY} &'])
             print(cmd)
 
 
-    close(froi)
-    remove(roi_mgh)
+    # remove(roi_mgh)
 
     return cmd
 
@@ -149,6 +149,7 @@ if __name__=='__main__':
 
     parser.add_argument('-i', '--input', help='freesurfer directory')
     parser.add_argument('-l', '--label', required=True, help='column header in the zscores table')
+    parser.add_argument('-o', '--output', required=True, help='a directory where ROI files are written')
     parser.add_argument('-v', '--view-type', default='snapshot',
                         help='snapshot or freeview; method for rendering ROI; default %(default)s')
 
@@ -160,5 +161,5 @@ if __name__=='__main__':
     lut= pjoin(fshome, 'FreeSurferColorLUT.txt')
     lut_colors= load_lut(lut)
 
-    render_roi(args.label, abspath(args.input), lut_colors, args.view_type)
+    render_roi(args.label, abspath(args.input), lut_colors, abspath(args.output), args.view_type)
 

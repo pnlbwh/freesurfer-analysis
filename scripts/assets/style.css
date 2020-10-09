@@ -1,3 +1,7 @@
+body {
+    margin: 20px;
+}
+
 #cmd {
     font-family: Georgia;
     color: blue;
@@ -6,4 +10,10 @@
     width: fit-content;
     padding-left: 30px;
     padding-right: 30px;
+}
+
+#analyze-status {
+    color: green;
+    font-weight: bold;
+    display: none;
 }

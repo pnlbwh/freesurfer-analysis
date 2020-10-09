@@ -547,8 +547,7 @@ def show_stats_table(df, activate, outDir):
 
 
 # callback within table_layout
-# @app.callback([Output('table-tooltip', 'children'), Output('roi', 'src')],
-@app.callback(Output('roi', 'src'),
+@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('roi-loading', 'children')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),
@@ -573,15 +572,16 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
             region= temp['column_id']
             roi_png= pjoin(outDir,f'{region}.png')
-            render_roi(region, fsdir, lut, roi_png, view_type)
+            cmd= render_roi(region, fsdir, lut, roi_png, view_type)
             if view_type=='snapshot':
                 roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
                 remove(roi_png)
 
-                return 'data:image/png;base64,{}'.format(roi_base64)
+                return ['data:image/png;base64,{}'.format(roi_base64),None,True]
 
-            # check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
-            #                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
+            else:
+                return [None,cmd,True]
+
 
 
     raise PreventUpdate

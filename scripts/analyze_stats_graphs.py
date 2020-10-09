@@ -167,7 +167,17 @@ def show_table(df, NUM_STD=2):
         dcc.Loading(children=html.Div(id='roi-loading')),
         html.Br(),
         html.Img(id='roi'),
-        html.Div(id='cmd'),
+        html.Div(id='cmd',
+                 style= {
+                'font-family': 'Georgia',
+                'color': 'blue',
+                'border': 'red',
+                'border-style': 'dotted',
+                'width': 'fit-content',
+                'padding-left': '30px',
+                'padding-right': '30px'
+            },
+        ),
         html.Br(),
         DataTable(
             id='table',

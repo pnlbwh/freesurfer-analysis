@@ -13,18 +13,6 @@ from os import makedirs
 
 import pandas as pd
 import numpy as np
-import argparse
-import logging
-
-# from verify_ports import get_ports
-# graphs_port= get_ports('graphs_port')
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-graphs = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app= dash.Dash(__name__, external_stylesheets=external_stylesheets)
-# log= logging.getLogger('werkzeug')
-# log.setLevel(logging.ERROR)
 
 
 def plot_graph(df, region, NUM_STD=2):
@@ -202,74 +190,3 @@ def show_table(df, NUM_STD=2):
 
     return app_layout
 
-
-summary_layout = html.Div([
-
-        'Group outliers by: ',
-        html.Div([
-            dcc.Dropdown(
-                id='group-by',
-                options=[{'label': i, 'value': i} for i in ['subjects','regions']],
-                value='subjects'
-            ),
-        ],
-        style = {'width': '20%'}),
-
-
-        html.Br(),
-        DataTable(
-            id='summary',
-            filter_action='native',
-            sort_action='native',
-
-            style_data_conditional=[{
-                'if': {'row_index': 'odd'},
-                'backgroundColor': 'rgb(240, 240, 240)'
-            }],
-
-            style_header={
-                'backgroundColor': 'rgb(230, 230, 230)',
-                'fontWeight': 'bold'
-            },
-
-            style_cell={
-                'textAlign': 'left',
-                'whiteSpace': 'pre-wrap'
-            },
-
-        ),
-
-])
-
-# graphs.layout = html.Div([
-#
-#     html.Div([
-#         dcc.Dropdown(
-#             id='region',
-#             options=[{'label': i, 'value': i} for i in regions],
-#             value=regions[0]
-#         )
-#     ],
-#         style={'width': '48%', 'display': 'inline-block'},
-#     ),
-#
-#     dcc.Graph(id='stat-graph'),
-#
-# ])
-#
-#
-# @app.callback(
-#     Output('stat-graph', 'figure'),
-#     [Input('region', 'value')])
-# def update_graph(region):
-#
-#     # if not region:
-#     #     raise PreventUpdate
-#
-#     fig, _, _ = plot_graph(region, EXTENT)
-#
-#     return fig
-
-
-# if __name__ == '__main__':
-#     graphs.run_server(debug=False, port= graphs_port, host= 'localhost')

@@ -7,10 +7,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash_table import DataTable
 from dash.exceptions import PreventUpdate
-import plotly.graph_objects as go
 from os.path import isfile, isdir, abspath, join as pjoin, dirname
 from os import makedirs, getenv, remove
-from subprocess import check_call
 from scipy.spatial.distance import mahalanobis
 from scipy.stats import scoreatpercentile
 from sklearn.ensemble import IsolationForest
@@ -33,7 +31,7 @@ CONTAMIN=.05
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True,
-                url_base_pathname='/dash/')
+                url_base_pathname='/', title='Outlier detection')
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
@@ -345,7 +343,7 @@ app.layout = html.Div([
 ])
 
 
-
+# callback for input_layout
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
                Output('zscore-computing', 'children'), Output('analyze-status', 'style')],
               [Input('csv','contents'), Input('delimiter','value'),
@@ -587,4 +585,4 @@ def display_page(pathname):
 
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=8051, host='localhost')
+    app.run_server(debug=True, port=8050, host='localhost')

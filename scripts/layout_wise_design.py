@@ -144,6 +144,8 @@ input_layout = html.Div(
         html.Br(),
         dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
+        html.Br(),
+        html.Br(),
         dcc.Link('Perform multivariate analysis', href='/multivar'),
 
     ],
@@ -359,7 +361,7 @@ def analyze(raw_contents, delimiter, outDir, analyze):
     # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
-    filename= pjoin(outDir, 'outliers.csv')
+    filename= pjoin(outDir, 'zscores.csv')
     df_scores= df_raw.copy()
     for column_name in regions:
         print(column_name)
@@ -437,7 +439,7 @@ def show_multiv_summary(df, activate, outDir, extent):
             pass
             # md.loc[i] = [subjects[i], round(measure[i],3), 'X']
 
-    filename= pjoin(outDir, 'multiv_outliers.csv')
+    filename= pjoin(outDir, 'outliers_multiv.csv')
     md.to_csv(filename, index=False)
 
     return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
@@ -470,7 +472,7 @@ def show_stats_table(activate, outDir):
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
-    filename= pjoin(outDir, 'outliers.csv')
+    filename= pjoin(outDir, 'zscores.csv')
     df_scores= pd.read_csv(filename)
     layout= show_table(df_scores)
 
@@ -531,7 +533,7 @@ def update_summary(subjects, outDir, extent, group_by):
     if not subjects:
         raise PreventUpdate
 
-    filename = pjoin(outDir, 'outliers.csv')
+    filename = pjoin(outDir, 'zscores.csv')
     df= pd.read_csv(filename)
     if group_by=='subjects':
         dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
@@ -555,7 +557,7 @@ def update_summary(subjects, outDir, extent, group_by):
             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
 
-    summary= pjoin(outDir, f'group-by-{group_by}.csv')
+    summary= pjoin(outDir, f'outliers-by-{group_by}.csv')
     dfs.to_csv(summary, index=False)
 
     return [dfs.to_dict('records'), columns]

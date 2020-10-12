@@ -25,8 +25,6 @@ from view_roi import load_lut, render_roi
 
 from util import delimiter_dict
 
-PERCENT_LOW=3
-PERCENT_HIGH=97
 CONTAMIN=.05
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -289,6 +287,34 @@ multiv_layout = html.Div(
         html.Br(),
 
         html.Div([
+            dcc.Dropdown(
+            id='multiv-method',
+            options=[
+                {'label': 'Isolation Forest', 'value': 'isf'},
+                {'label': 'Mahalonobis distance', 'value': 'md'},
+            ],
+            value='isf'
+            )],
+
+        style={'width': '48%', 'display': 'inline-block'}),
+
+        html.Br(),
+        'Scores, calculated in the above method, falling outside [LOW,HIGH] percentiles are classified as outliers',
+        html.Br(),
+        'The defaults are: ',
+        dcc.Input(
+            value='',
+            id='lower',
+            # placeholder='LOW'
+        ),
+
+        dcc.Input(
+            value='',
+            id='higher',
+            #placeholder='HIGH'
+        ),
+        html.Br(),
+        html.Div([
             html.Button(id='multiv-button',
                         n_clicks_timestamp=0,
                         children='Perform multivariate analysis',
@@ -378,12 +404,25 @@ def analyze(raw_contents, delimiter, outDir, analyze):
     return (options, df_raw.to_dict('list'), subjects, True, {'display': 'block'})
 
 
+
+# callback within multiv_layout
+@app.callback([Output('lower', 'placeholder'), Output('higher', 'placeholder')],
+               [Input('multiv-method', 'value')])
+def show_multiv_summary(method):
+    if method=='md':
+        return ['0','80']
+    elif method=='isf':
+        return ['3','97']
+
+
+
 # callback for multiv_layout
 @app.callback([Output('multiv-summary', 'data'), Output('multiv-summary', 'columns'),
                Output('isof-calculating', 'children')],
-              [Input('df','data'), Input('multiv-button','n_clicks'),
-               Input('outDir', 'value'), Input('extent','value')])
-def show_multiv_summary(df, activate, outDir, extent):
+              [Input('df','data'), Input('outDir', 'value'),
+               Input('multiv-button','n_clicks'), Input('multiv-method', 'value'),
+               Input('lower','value'), Input('higher','value')])
+def show_multiv_summary(df, outDir, activate, method, PERCENT_LOW, PERCENT_HIGH):
 
     if not activate:
         raise PreventUpdate
@@ -398,7 +437,7 @@ def show_multiv_summary(df, activate, outDir, extent):
     L= len(subjects)
 
     columns= ['Subjects', 'Mahalonobis/IsoForest', 'Outlier']
-    md= pd.DataFrame(columns=columns)
+    multiv_summary= pd.DataFrame(columns=columns)
 
     X= df.values
     meanX= np.mean(X, axis=0)
@@ -407,43 +446,53 @@ def show_multiv_summary(df, activate, outDir, extent):
     X= np.delete(X, ind, axis=1)
     meanX= np.delete(meanX, ind)
 
-    # Mahalanobis distance block =================================
-    # Normalizing to avoid md^2 < 0
-    X = X / np.max(X, axis=0)
-    covX= np.cov(X, rowvar= False)
-    icovX= np.linalg.inv(covX)
-    MD= np.zeros((L,))
-    for i in range(L):
-        x= X[i,: ]
-        MD[i]= mahalanobis(x, meanX, icovX)
+    if method=='md':
+        PERCENT_LOW= int(PERCENT_LOW) if PERCENT_LOW else 0
+        PERCENT_HIGH = int(PERCENT_HIGH) if PERCENT_HIGH else 80
+        # Mahalanobis distance block =================================
+        # Normalizing to avoid md^2 < 0
+        X = X / np.max(X, axis=0)
+        covX= np.cov(X, rowvar= False)
+        icovX= np.linalg.inv(covX)
+        MD= np.zeros((L,))
+        for i in range(L):
+            x= X[i,: ]
+            MD[i]= mahalanobis(x, meanX, icovX)
 
+        measure= MD
 
-    # IsolationForest block =================================
-    rng = np.random.RandomState(123456)
-    num_samples = len(subjects)
-    iso_f = IsolationForest(max_samples=num_samples,
-                            contamination=CONTAMIN,
-                            random_state=rng)
-    iso_f.fit(df)
-    pred_scores = iso_f.decision_function(df)
+        # ENH could be done according to Chi2 probability, see draft/md_chi2_analysis.py
+
+    elif method=='isf':
+        PERCENT_LOW= int(PERCENT_LOW) if PERCENT_LOW else 3
+        PERCENT_HIGH = int(PERCENT_HIGH) if PERCENT_HIGH else 97
+        # IsolationForest block =================================
+        rng = np.random.RandomState(123456)
+        num_samples = len(subjects)
+        iso_f = IsolationForest(max_samples=num_samples,
+                                contamination=CONTAMIN,
+                                random_state=rng)
+        iso_f.fit(df)
+        pred_scores = iso_f.decision_function(df)
+
+        measure= pred_scores
 
 
     # Decision block
-    measure= pred_scores
     h_thresh= scoreatpercentile(measure, PERCENT_HIGH)
     l_thresh = scoreatpercentile(measure, PERCENT_LOW)
     inliers= np.logical_and(measure <= h_thresh, measure >= l_thresh)
 
     for i in range(L):
-        md.loc[i] = [subjects[i], round(measure[i], 3), '' if inliers[i] else 'X']
+        multiv_summary.loc[i] = [subjects[i], round(measure[i], 3), '' if inliers[i] else 'X']
         if ~inliers[i]:
             pass
             # md.loc[i] = [subjects[i], round(measure[i],3), 'X']
 
     filename= pjoin(outDir, 'outliers_multiv.csv')
-    md.to_csv(filename, index=False)
+    multiv_summary.to_csv(filename, index=False)
 
-    return [md.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
+    return [multiv_summary.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
 
 
 # callback for graph_layout

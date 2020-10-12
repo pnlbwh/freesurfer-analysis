@@ -132,6 +132,7 @@ input_layout = html.Div(
 
         dcc.Store(id='df'),
         dcc.Store(id='subjects'),
+
         # other dcc.Store()
 
         html.Div(id='user-inputs'),
@@ -341,12 +342,10 @@ app.layout = html.Div([
 
 
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
-               Output('summary', 'data'), Output('summary', 'columns'),
                Output('zscore-computing', 'children'), Output('analyze-status', 'style')],
               [Input('csv','contents'), Input('delimiter','value'),
-               Input('outDir', 'value'), Input('extent', 'value'),
-               Input('analyze', 'n_clicks'), Input('group-by', 'value')])
-def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
+               Input('outDir', 'value'), Input('analyze', 'n_clicks')])
+def analyze(raw_contents, delimiter, outDir, analyze):
 
     if not analyze:
         raise PreventUpdate
@@ -361,74 +360,19 @@ def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
     options = [{'label': i, 'value': i} for i in regions]
 
     filename= pjoin(outDir, 'outliers.csv')
-    if isfile(filename):
-        df_inliers= pd.read_csv(filename)
-    else:
-        df_inliers= df_raw.copy()
-        for column_name in regions:
-            print(column_name)
-            _, inliers, zscores= plot_graph(df_raw, column_name)
+    df_scores= df_raw.copy()
+    for column_name in regions:
+        print(column_name)
+        _, inliers, zscores= plot_graph(df_raw, column_name)
 
-            # write outlier summary
-            df_inliers[column_name] = zscores
+        # write outlier summary
+        df_scores[column_name] = zscores
 
 
-        df_inliers.to_csv(filename, index=False)
+    df_scores.to_csv(filename, index=False)
 
 
-    df= df_inliers.copy()
-    if group_by == 'subjects':
-        dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
-        columns = [{'name': i,
-                    'id': i,
-                    'hideable': True,
-                    } for i in dfs.columns]
-
-        for i in range(len(df)):
-            outliers = df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
-            dfs.loc[i] = [df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
-
-    else:
-        dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
-        columns = [{'name': i,
-                    'id': i,
-                    'hideable': True,
-                    } for i in dfs.columns]
-
-        for i, region in enumerate(df.columns[1:]):
-            outliers = df[df.columns[0]].values[abs(df[region]) > extent]
-            dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
-
-    summary = pjoin(outDir, f'group-by-{group_by}.csv')
-    dfs.to_csv(summary, index=False)
-
-
-    return (options, df_raw.to_dict('list'), subjects, dfs.to_dict('records'), columns, True, {'display': 'block'})
-
-
-
-
-# callback for input_layout
-# @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data')],
-#               [Input('csv','contents'), Input('delimiter','value'),
-#                Input('analyze', 'n_clicks')])
-# def update_dropdown(raw_contents, delimiter, analyze):
-#
-#     if not analyze:
-#         raise PreventUpdate
-#
-#     # df= pd.read_csv(r'C:\Users\tashr\Documents\diag-cte\asegstats.csv')
-#
-#     _, contents = raw_contents.split(',')
-#     decoded = base64.b64decode(contents)
-#     df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
-#
-#     subjects = df[df.columns[0]].values
-#     regions = df.columns.values[1:]
-#     # do the analysis here
-#     options = [{'label': i, 'value': i} for i in regions]
-#
-#     return (options, df.to_dict('list'), subjects)
+    return (options, df_raw.to_dict('list'), subjects, True, {'display': 'block'})
 
 
 # callback for multiv_layout
@@ -436,7 +380,7 @@ def analyze(raw_contents, delimiter, outDir, extent, analyze, group_by):
                Output('isof-calculating', 'children')],
               [Input('df','data'), Input('multiv-button','n_clicks'),
                Input('outDir', 'value'), Input('extent','value')])
-def show_stats_table(df, activate, outDir, extent):
+def show_multiv_summary(df, activate, outDir, extent):
 
     if not activate:
         raise PreventUpdate
@@ -514,44 +458,23 @@ def update_graph(df, region, extent):
 
 
 # callback for table_layout
-@app.callback([Output('table-content', 'children'), Output('dfscores','data'), Output('table-loading', 'children')],
-              [Input('df','data'),
-               Input('gen-table','n_clicks'), Input('outDir', 'value')])
-def show_stats_table(df, activate, outDir):
+@app.callback([Output('table-content', 'children'),
+               Output('table-loading', 'children')],
+               [Input('gen-table','n_clicks'), Input('outDir', 'value')])
+def show_stats_table(activate, outDir):
     # print(button)
     if not activate:
         raise PreventUpdate
-
-    # ENH show a dialogue box warning about duration
 
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
-    # subject column is lost in the following conversion
-    df= pd.DataFrame(df)
+    filename= pjoin(outDir, 'outliers.csv')
+    df_scores= pd.read_csv(filename)
+    layout= show_table(df_scores)
 
-    regions = df.columns.values[1:]
-
-    # generate all figures
-    filename = pjoin(outDir, 'outliers.csv')
-    if isfile(filename):
-        df_inliers= pd.read_csv(filename)
-
-    else:
-        df_inliers = df.copy()
-        for column_name in regions:
-            print(column_name)
-            _, inliers, zscores= plot_graph(df, column_name)
-
-            # write outlier summary
-            df_inliers[column_name] = zscores
-
-        df_inliers.to_csv(filename, index=False)
-
-    layout= show_table(df_inliers)
-
-    return (layout, df_inliers.to_dict('list'), True)
+    return (layout, True)
 
 
 # callback within table_layout
@@ -597,44 +520,45 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
 
 
-# # callback for summary_layout
-# @app.callback([Output('summary', 'data'),
-#                Output('summary', 'columns')],
-#               [Input('dfscores','data'), Input('outDir', 'value'),
-#                Input('extent','value'), Input('group-by', 'value')])
-# def update_summary(df, outDir, extent, group_by):
-#
-#     if not df:
-#         raise PreventUpdate
-#
-#     df= pd.DataFrame(df)
-#
-#     if group_by=='subjects':
-#         dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
-#         columns = [{'name': i,
-#                     'id': i,
-#                     'hideable': True,
-#                     } for i in dfs.columns]
-#
-#         for i in range(len(df)):
-#             outliers=df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
-#             dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
-#
-#     else:
-#         dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
-#         columns = [{'name': i,
-#                     'id': i,
-#                     'hideable': True,
-#                     } for i in dfs.columns]
-#
-#         for i,region in enumerate(df.columns[1:]):
-#             outliers= df[df.columns[0]].values[abs(df[region]) > extent]
-#             dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
-#
-#     summary= pjoin(outDir, f'group-by-{group_by}.csv')
-#     dfs.to_csv(summary, index=False)
-#
-#     return [dfs.to_dict('records'), columns]
+# callback for summary_layout
+@app.callback([Output('summary', 'data'),
+               Output('summary', 'columns')],
+               [Input('subjects', 'data'), Input('outDir', 'value'),
+               Input('extent','value'), Input('group-by', 'value')])
+def update_summary(subjects, outDir, extent, group_by):
+
+    # subjects only serve as a control for firing this callback
+    if not subjects:
+        raise PreventUpdate
+
+    filename = pjoin(outDir, 'outliers.csv')
+    df= pd.read_csv(filename)
+    if group_by=='subjects':
+        dfs = pd.DataFrame(columns=['Subject ID', '# of outliers', 'outliers'])
+        columns = [{'name': i,
+                    'id': i,
+                    'hideable': True,
+                    } for i in dfs.columns]
+
+        for i in range(len(df)):
+            outliers=df.columns.values[1:][abs(df.loc[i].values[1:]) > extent]
+            dfs.loc[i]=[df.loc[i][0], len(outliers), '\n'.join([x for x in outliers])]
+
+    else:
+        dfs = pd.DataFrame(columns=['Regions', '# of outliers', 'outliers'])
+        columns = [{'name': i,
+                    'id': i,
+                    'hideable': True,
+                    } for i in dfs.columns]
+
+        for i,region in enumerate(df.columns[1:]):
+            outliers= df[df.columns[0]].values[abs(df[region]) > extent]
+            dfs.loc[i] = [region, len(outliers), '\n'.join([str(x) for x in outliers])]
+
+    summary= pjoin(outDir, f'group-by-{group_by}.csv')
+    dfs.to_csv(summary, index=False)
+
+    return [dfs.to_dict('records'), columns]
 
 
 

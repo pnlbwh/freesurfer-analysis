@@ -64,6 +64,7 @@ input_layout = html.Div(
 
         html.Br(),
         dcc.Input(
+            value='',
             id='outDir',
             placeholder='Output directory ',
             style={
@@ -199,6 +200,7 @@ table_layout= html.Div(
     html.Br(),
     dcc.Store(id='dfscores'),
     dcc.Input(
+        value='',
         id='template',
         placeholder='freesurfer directory template',
         style={
@@ -335,6 +337,7 @@ multiv_layout = html.Div(
 
 app.layout = html.Div([
 
+    # purpose of refresh is not understood
     html.Div(id='main-content',
              children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout]),
     dcc.Location(id='url', refresh=False),

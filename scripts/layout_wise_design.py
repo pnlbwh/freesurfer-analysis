@@ -530,7 +530,8 @@ def show_stats_table(activate, outDir):
 
 
 # callback within table_layout
-@app.callback([Output('roi', 'src'), Output('cmd', 'children'), Output('roi-loading', 'children')],
+@app.callback([Output('roi-x', 'src'), Output('roi-y', 'src'), Output('roi-z', 'src'),
+               Output('cmd', 'children'), Output('roi-loading', 'children')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),
@@ -554,13 +555,17 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
             lut = load_lut(lut)
 
             region= temp['column_id']
-            roi_png= pjoin(outDir,f'{region}.png')
             cmd= render_roi(region, fsdir, lut, outDir, view_type)
             if view_type=='snapshot':
-                roi_base64 = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
-                # remove(roi_png)
+                roi_base64=['','','']
+                for i, m in enumerate(['x', 'y', 'z']):
+                    roi_png = pjoin(outDir, f'{region}_{m}.png')
+                    roi_base64[i] = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
 
-                return ['data:image/png;base64,{}'.format(roi_base64),None,True]
+                return ['data:image/png;base64,{}'.format(roi_base64[0]),
+                        'data:image/png;base64,{}'.format(roi_base64[1]),
+                        'data:image/png;base64,{}'.format(roi_base64[2]),
+                        None,True]
 
             else:
                 msg= ['Execute the following command in a terminal to see 3D rendering:', html.Br(), html.Br(), cmd]

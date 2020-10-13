@@ -151,7 +151,9 @@ def show_table(df, NUM_STD=2):
 
         dcc.Loading(children=html.Div(id='roi-loading')),
         html.Br(),
-        html.Img(id='roi'),
+        html.Img(id='roi-x'),
+        html.Img(id='roi-y'),
+        html.Img(id='roi-z'),
         html.Div(id='cmd'),
         html.Br(),
         DataTable(

@@ -77,8 +77,16 @@ def render_roi(table_header, fsdir, lut, outDir, method='snapshot'):
 
     cmd = ''
     if method=='snapshot':
-        plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
-                 output_file= pjoin(outDir, region+'.png'))
+        cut_coords= [i for i in range(-30, 31, 10)]
+
+        # coronal, axial, and sagittal views
+        for m in ['x', 'y', 'z']:
+            plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
+                     output_file= pjoin(outDir, region+f'_{m}.png'), cut_coords=cut_coords, display_mode=m)
+
+        # ortho view
+        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
+        #          output_file= pjoin(outDir, region+'.png'))
         # pyplot.show()
 
 

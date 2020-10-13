@@ -569,7 +569,7 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
 
             else:
                 msg= ['Execute the following command in a terminal to see 3D rendering:', html.Br(), html.Br(), cmd]
-                return [None,msg,True]
+                return [None,None,None,msg,True]
 
 
 

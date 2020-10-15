@@ -151,10 +151,11 @@ def show_table(df, NUM_STD=2):
 
         dcc.Loading(id='render ROI on brain', type='cube', debug=True, fullscreen=True),
         html.Br(),
+        dcc.Location(id='roi-markdown'),
+        html.Div(id='cmd'),
         html.Img(id='roi-x'),
         html.Img(id='roi-y'),
         html.Img(id='roi-z'),
-        html.Div(id='cmd'),
         html.Br(),
         DataTable(
             id='table',

@@ -75,38 +75,25 @@ def render_roi(table_header, fsdir, lut, outDir, method='snapshot'):
     roi= (seg.get_fdata()==label)*label
     roi_nifti= Nifti1Image(roi, affine= seg.affine)
 
-    cmd = ''
+
     if method=='snapshot':
         cut_coords= [i for i in range(-30, 31, 10)]
 
+        cmd = 'gio open '
         # coronal, axial, and sagittal views
         for m in ['x', 'y', 'z']:
+            output_file= pjoin(outDir, region+f'_{m}.png')
+            cmd+= output_file+ ' '
             plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
-                     output_file= pjoin(outDir, region+f'_{m}.png'), cut_coords=cut_coords, display_mode=m)
+                     output_file= output_file, cut_coords=cut_coords, display_mode=m)
+
+        cmd+= '&'
 
         # ortho view
         # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
         #          output_file= pjoin(outDir, region+'.png'))
         # pyplot.show()
 
-
-        # if a separate folder is not used as assets_folder, dash will try loading all its content
-        # so create a tmpdir and save the snapshot there
-        # problem with this approach:
-        #       i. debug=False, no way to stop the server, plot does not refresh with selected cells on the web browser
-        #       ii. debug=True, signal from opened pyplot does not mingle with callback signal
-        #
-        # tmpdir= mkdtemp()
-        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region, 
-        #          output_file= tmpdir+ f'/{region}.png')
-
-        # app = dash.Dash(__name__, assets_folder=tmpdir, assets_url_path='/')
-        # app.layout = html.Div([
-        #     html.Img(src=f'{region}.png')
-        # ])
-        # webbrowser.open('http://localhost:8010')
-        # app.run_server(port=8010, host= 'localhost')
-        # rmtree(tmpdir)
 
     elif method=='freeview':
 

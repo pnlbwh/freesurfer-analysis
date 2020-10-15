@@ -547,7 +547,8 @@ which would prevent rendering an image or html under http://localhost:8050
 '''
 # callback within table_layout
 @app.callback([Output('roi-x', 'src'), Output('roi-y', 'src'), Output('roi-z', 'src'),
-               Output('cmd', 'children'), Output('render ROI on brain', 'displayed')],
+               Output('cmd', 'children'), Output('render ROI on brain', 'displayed'),
+               Output('roi-markdown', 'href')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),
@@ -578,14 +579,17 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
                     roi_png = pjoin(outDir, f'{region}_{m}.png')
                     roi_base64[i] = base64.b64encode(open(roi_png, 'rb').read()).decode('ascii')
 
+                msg = ['Execute the following command in a terminal to open images in separate windows:',
+                       html.Br(), html.Br(), cmd]
                 return ['data:image/png;base64,{}'.format(roi_base64[0]),
                         'data:image/png;base64,{}'.format(roi_base64[1]),
                         'data:image/png;base64,{}'.format(roi_base64[2]),
-                        None,True]
+                        msg,True,'/zscores#cmd']
 
             else:
-                msg= ['Execute the following command in a terminal to see 3D rendering:', html.Br(), html.Br(), cmd]
-                return [None,None,None,msg,True]
+                msg= ['Execute the following command in a terminal to see 3D rendering:',
+                      html.Br(), html.Br(), cmd]
+                return [None,None,None,msg,True,'/zscores#cmd']
 
 
 
@@ -642,7 +646,7 @@ def display_page(pathname):
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
-    elif pathname == '/zscores':
+    elif '/zscores' in pathname:
         display_layout[2] = {'display': 'auto'}
     elif pathname == '/summary':
         display_layout[3] = {'display': 'auto'}

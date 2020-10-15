@@ -2,7 +2,6 @@
 
 import base64, io
 import dash
-import flask
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -659,4 +658,4 @@ def display_page(pathname):
 
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=8050, host='localhost')
+    app.run_server(debug=True, port=getenv('DASH_PORT', 8050), host='localhost')

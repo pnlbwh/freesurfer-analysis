@@ -149,7 +149,7 @@ def show_table(df, NUM_STD=2):
             style={'width': '20%', }),
         html.Br(),
 
-        dcc.Loading(children=html.Div(id='roi-loading')),
+        dcc.Loading(id='render ROI on brain', type='cube', debug=True, fullscreen=True),
         html.Br(),
         html.Img(id='roi-x'),
         html.Img(id='roi-y'),

@@ -2,6 +2,7 @@
 
 import base64, io
 import dash
+import flask
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -122,7 +123,7 @@ input_layout = html.Div(
                         title='Analyze text file to detect outliers')],
             style={'float': 'center', 'display': 'inline-block'}),
 
-        dcc.Loading(children=html.Div(id='zscore-computing')),
+        dcc.Loading(id='parse summary and compute zscore', fullscreen= True, debug=True, type='graph'),
         html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
 
         # Other dcc.Input()
@@ -219,7 +220,7 @@ table_layout= html.Div(
         style={'float': 'center', 'display': 'inline-block'}
     ),
 
-    dcc.Loading(children=html.Div(id='table-loading')),
+    dcc.Loading(children=html.Div(id='generate table')),
     html.Div(id='table-content'),
 
     ],
@@ -323,6 +324,7 @@ multiv_layout = html.Div(
 
         html.Br(),
         dcc.Loading(children=html.Div(id='isof-calculating')),
+        html.Br(),
 
         DataTable(
             id='multiv-summary',
@@ -371,7 +373,7 @@ app.layout = html.Div([
 
 # callback for input_layout
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
-               Output('zscore-computing', 'children'), Output('analyze-status', 'style')],
+               Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
               [Input('csv','contents'), Input('delimiter','value'),
                Input('outDir', 'value'), Input('analyze', 'n_clicks')])
 def analyze(raw_contents, delimiter, outDir, analyze):
@@ -511,7 +513,7 @@ def update_graph(df, region, extent):
 
 # callback for table_layout
 @app.callback([Output('table-content', 'children'),
-               Output('table-loading', 'children')],
+               Output('generate table', 'children')],
                [Input('gen-table','n_clicks'), Input('outDir', 'value')])
 def show_stats_table(activate, outDir):
     # print(button)
@@ -529,9 +531,23 @@ def show_stats_table(activate, outDir):
     return (layout, True)
 
 
+
+'''
+Automatically opening an ROI image in a different tab is just not possible
+https://community.plotly.com/t/trigger-a-click-on-html-a-from-callback/13234
+
+@app.server.route() could have been a solution in the following ways:
+  - Serving a static html with potential JavaScript coding for local image loading
+    https://community.plotly.com/t/serve-static-html-to-new-tab/17383/2
+  - Displaying local image
+    https://github.com/plotly/dash/issues/71#issuecomment-313222343
+
+Both the two approaches are curbed by display_page() callback
+which would prevent rendering an image or html under http://localhost:8050
+'''
 # callback within table_layout
 @app.callback([Output('roi-x', 'src'), Output('roi-y', 'src'), Output('roi-z', 'src'),
-               Output('cmd', 'children'), Output('roi-loading', 'children')],
+               Output('cmd', 'children'), Output('render ROI on brain', 'displayed')],
               [Input('table', 'selected_cells'),
                Input('view-type', 'value'),
                Input('template', 'value'),

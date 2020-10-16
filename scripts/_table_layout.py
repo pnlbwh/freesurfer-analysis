@@ -153,6 +153,7 @@ def show_table(df, NUM_STD=2):
         html.Br(),
         dcc.Location(id='roi-markdown'),
         html.Div(id='cmd'),
+        html.Br(),
         html.Img(id='roi-x'),
         html.Img(id='roi-y'),
         html.Img(id='roi-z'),

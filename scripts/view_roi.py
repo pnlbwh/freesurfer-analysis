@@ -77,22 +77,17 @@ def render_roi(table_header, fsdir, lut, outDir, method='snapshot'):
 
 
     if method=='snapshot':
-        cut_coords= [i for i in range(-30, 31, 10)]
 
         cmd = 'gio open '
         # coronal, axial, and sagittal views
         for m in ['x', 'y', 'z']:
             output_file= pjoin(outDir, region+f'_{m}.png')
             cmd+= output_file+ ' '
+            # let nilearn automaically find 7 cuts
             plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
-                     output_file= output_file, cut_coords=cut_coords, display_mode=m)
+                     output_file= output_file, display_mode=m)
 
         cmd+= '&'
-
-        # ortho view
-        # plot_roi(roi_nifti, bg_img=brain_nifti, draw_cross=False, cmap=color, title=region,
-        #          output_file= pjoin(outDir, region+'.png'))
-        # pyplot.show()
 
 
     elif method=='freeview':
@@ -106,38 +101,37 @@ def render_roi(table_header, fsdir, lut, outDir, method='snapshot'):
             # surfaces pial and white
             white_mgh= pjoin(fsdir, f'surf/{hemis}.white')
             pial_mgh= pjoin(fsdir, f'surf/{hemis}.pial')
-            check_call([f'freeview -v {brain_mgh} '
+            cmd= ' '.join([f'freeview -v {brain_mgh} '
                         f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
                         f'{seg_mgh}:colormap=lut:opacity={OPACITY} '
                         f'-f {white_mgh}:edgecolor=red '
-                        f'{pial_mgh}:edgecolor=yellow'], shell=True)
+                        f'{pial_mgh}:edgecolor=yellow &'])
+            # check_call(cmd, shell=True)
 
         else:
             # show aseg
             # background brain.mgz
             # foreground roi.mgz and aseg.mgz
-            # check_call([f'freeview -v {brain_mgh} '
-            #             f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
-            #             f'{seg_mgh}:colormap=lut:opacity={OPACITY}'], shell=True)
             cmd= ' '.join([f'freeview -v {brain_mgh} '
                            f'{roi_mgh}:colormap=lut:opacity={OPACITY} '
                            f'{seg_mgh}:colormap=lut:opacity={OPACITY} &'])
-            print(cmd)
+            # check_call(cmd, shell=True)
 
 
-    # remove(roi_mgh)
+    print(cmd)
 
     return cmd
 
 if __name__=='__main__':
     # fsdir=r'C:\\Users\\tashr\\Documents\freesurfer'
     # lut = r'C:\\Users\\tashr\\Documents\FreeSurferColorLUT.txt'
+    # output = r'C:\\Users\\tashr\\Documents\diag-cte'
     # lut_colors= load_lut(lut)
     # table_header = 'Left-Thalamus-Proper'
     # table_header= 'Left-Lateral-Ventricle'
     # table_header = 'lh_transversetemporal_volume'
     # table_header= 'rh_frontalpole_volume'
-    # render_roi(table_header, fsdir, lut_colors, method='snapshot')
+    # render_roi(table_header, fsdir, lut_colors, output, method='snapshot')
 
     parser= argparse.ArgumentParser(
         description='Render ROI overlaid on the brain, responds to selected cells in stats table')

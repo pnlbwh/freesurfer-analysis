@@ -64,6 +64,7 @@ input_layout = html.Div(
             value='',
             id='outDir',
             placeholder='Output directory ',
+            debounce=True,
             style={
                 'width': '20%',
                 # 'height': '40px',
@@ -200,6 +201,7 @@ table_layout= html.Div(
         value='',
         id='template',
         placeholder='freesurfer directory template',
+        debounce=True,
         style={
             'width': '50%',
             # 'height': '40px',
@@ -305,12 +307,14 @@ multiv_layout = html.Div(
         'The defaults are: ',
         dcc.Input(
             value='',
+            debounce=True,
             id='lower',
             # placeholder='LOW'
         ),
 
         dcc.Input(
             value='',
+            debounce=True,
             id='higher',
             #placeholder='HIGH'
         ),

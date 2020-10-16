@@ -389,6 +389,10 @@ def analyze(raw_contents, delimiter, outDir, analyze):
     # do the analysis here
     options = [{'label': i, 'value': i} for i in regions]
 
+    outDir= abspath(outDir)
+    if not isdir(outDir):
+        makedirs(outDir, exist_ok= True)
+
     filename= pjoin(outDir, 'zscores.csv')
     df_scores= df_raw.copy()
     for column_name in regions:
@@ -520,8 +524,6 @@ def show_stats_table(activate, outDir):
         raise PreventUpdate
 
     outDir= abspath(outDir)
-    if not isdir(outDir):
-        makedirs(outDir, exist_ok= True)
 
     filename= pjoin(outDir, 'zscores.csv')
     df_scores= pd.read_csv(filename)

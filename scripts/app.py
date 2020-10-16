@@ -43,18 +43,19 @@ input_layout = html.Div(
             id='csv',
             children=html.Div([
                 'Drag and Drop or ',
-                html.A('Select Files')
+                html.A('Select Files'),
+                html.Div(id='filename'),
             ]),
 
             style={
-                'width': '30%',
-                'height': '40px',       # height of the box
-                'lineHeight': '40px',   # height of a carriage return
-                'borderWidth': '1px',   # width of the border
+                'width': '400px',
+                'height': '60px',
+                'borderWidth': '1px',
                 'borderStyle': 'dashed',
-                'borderRadius': '5px',  # curvature of the border
+                'borderRadius': '5px',   # curvature of the border
                 'textAlign': 'center',
-                # 'margin': '10px'      # margin from left
+                # 'margin': '10px',      # margin from left
+                # 'lineHeight': '40px'   # height of a carriage return
             },
         ),
 
@@ -369,6 +370,16 @@ app.layout = html.Div([
     html.Br()
 ])
 
+
+
+# callback for uploaded file
+@app.callback(Output('filename', 'children'),
+              [Input('csv', 'contents'), Input('csv', 'filename')])
+def upload(status, filename):
+    if not status:
+        raise PreventUpdate
+
+    return 'Loaded: '+filename
 
 # callback for input_layout
 @app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),

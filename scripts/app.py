@@ -29,7 +29,7 @@ CONTAMIN=.05
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True,
-                url_base_pathname='/', title='Outlier detection')
+                title='Outlier detection')
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
@@ -675,4 +675,4 @@ def display_page(pathname):
 
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=getenv('DASH_PORT', 8050), host='localhost')
+    app.run_server(debug=True, host='localhost')

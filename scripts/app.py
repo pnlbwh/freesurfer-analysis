@@ -60,6 +60,8 @@ input_layout = html.Div(
         ),
 
         html.Br(),
+        'Output directory ',
+        html.Br(),
         dcc.Input(
             value='',
             id='outDir',
@@ -197,6 +199,8 @@ table_layout= html.Div(
     html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
+    'Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer',
+    html.Br(),
     dcc.Input(
         value='',
         id='template',
@@ -579,7 +583,7 @@ def get_active_cell(selected_cells, view_type, template, subjects, outDir):
         if not template:
             raise PreventUpdate
         # nilearn or freeview rendering
-        fsdir= template.replace('$', str(subjects[temp['row']]))
+        fsdir= template.replace('sub-*/', 'sub-{}/'.format(subjects[temp['row']]))
         if isdir(fsdir):
             fshome = getenv('FREESURFER_HOME', None)
             if not fshome:

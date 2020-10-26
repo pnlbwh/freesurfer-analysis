@@ -22,8 +22,11 @@ from subprocess import check_call
 
 from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
+from _compare_layout import plot_graph_compare, display_model
 
 from util import delimiter_dict
+
+SCRIPTDIR=dirname(abspath(__file__))
 
 CONTAMIN=.05
 
@@ -119,6 +122,69 @@ input_layout = html.Div(
 
         html.Br(),
         html.Br(),
+
+        html.Details(children=[
+            html.Summary('Demographics'),
+            'Demographic info csv file',
+            html.Br(),
+            dcc.Upload(
+                id='participants',
+                children=html.Div([
+                    'Drag and Drop or ',
+                    html.A('Select Files')
+                ]),
+
+                style={
+                    'width': '30%',
+                    'height': '40px',  # height of the box
+                    'lineHeight': '40px',  # height of a carriage return
+                    'borderWidth': '1px',  # width of the border
+                    'borderStyle': 'dashed',
+                    'borderRadius': '5px',  # curvature of the border
+                    'textAlign': 'center',
+                    # 'margin': '10px'      # margin from left
+                },
+            ),
+
+            html.Br(),
+            'Control group',
+            html.Br(),
+            dcc.Input(
+                id='control',
+                style={
+                    'width': '20%',
+                    # 'height': '40px',
+                    # 'lineHeight': '40px',
+                    'borderWidth': '1px',
+                    # 'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    # 'margin': '10px'
+                },
+                # value='checking_bin==3'
+            ),
+
+            html.Br(),
+            'Predictor in regression',
+            html.Br(),
+            dcc.Input(
+                id='effect',
+                style={
+                    'width': '20%',
+                    # 'height': '40px',
+                    # 'lineHeight': '40px',
+                    'borderWidth': '1px',
+                    # 'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    # 'margin': '10px'
+                },
+                # value='checking_bin==3'
+            ),
+        ]),
+
+        html.Br(),
+        html.Br(),
         html.Div([
             html.Button(id='analyze',
                         n_clicks_timestamp=0,
@@ -133,6 +199,7 @@ input_layout = html.Div(
 
         dcc.Store(id='df'),
         dcc.Store(id='subjects'),
+        dcc.Store(id='dfcombined'),
 
         # other dcc.Store()
 
@@ -144,6 +211,8 @@ input_layout = html.Div(
         dcc.Link('See outliers in graphs', href='/graphs'),
         html.Br(),
         dcc.Link('See outliers in table', href='/zscores'),
+        html.Br(),
+        dcc.Link('See GLM fitting summary', href='/compare'),
         html.Br(),
         html.Br(),
         html.Br(),
@@ -182,6 +251,38 @@ graph_layout= html.Div(
     ],
 
     style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
+)
+
+
+compare_layout = html.Div(
+    id= 'compare_layout',
+    children= [
+
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+        dcc.Link('See uncorrected outliers in graphs', href='/graphs'),
+        html.Br(),
+        html.Br(),
+
+        html.Div([
+            dcc.Dropdown(
+                id='region-compare',
+            )
+        ],
+            style={'width': '48%', 'display': 'inline-block'}),
+
+
+        html.Br(),
+        'Corrected outliers, superimposed on the uncorrected ones, accounting for standard scores of the residuals:',
+        dcc.Graph(id='stat-graph-compare'),
+        dcc.Graph(id='model-graph'),
+        html.Br(),
+        dcc.Markdown(id='model-summary'),
+        html.Br()
+        ],
+
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
+
 )
 
 
@@ -373,7 +474,7 @@ app.layout = html.Div([
 
     # purpose of refresh is not understood
     html.Div(id='main-content',
-             children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout]),
+             children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout, compare_layout]),
     dcc.Location(id='url', refresh=False),
     html.Br()
 ])
@@ -389,34 +490,75 @@ def upload(status, filename):
 
     return 'Loaded: '+filename
 
-# callback for input_layout
-@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
+
+# callback for input_layout / GLM analysis
+# df.data will hold residuals= predicted-given
+# dfcombined.data will hold a combined DataFrame of given and demographics
+@app.callback([Output('region', 'options'), Output('region-compare', 'options'),
+               Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
-              [Input('csv','contents'), Input('delimiter','value'),
-               Input('outDir', 'value'), Input('analyze', 'n_clicks')])
-def analyze(raw_contents, delimiter, outDir, analyze):
+              [Input('csv','contents'), Input('csv','filename'),
+               Input('participants','contents'), Input('delimiter','value'),
+               Input('outDir', 'value'),
+               Input('effect','value'), Input('control','value'),
+               Input('analyze', 'n_clicks')])
+def analyze(raw_contents, filename, dgraph_contents, delimiter, outDir, effect, control, analyze):
 
     if not analyze:
         raise PreventUpdate
 
     _, contents = raw_contents.split(',')
     decoded = base64.b64decode(contents)
-    df_raw = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
-
-    subjects = df_raw[df_raw.columns[0]].values
-    regions = df_raw.columns.values[1:]
-    # do the analysis here
-    options = [{'label': i, 'value': i} for i in regions]
+    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
 
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
+
+    if dgraph_contents:
+        summaryCsv= pjoin(outDir, filename)
+        df.to_csv(summaryCsv, index= False)
+
+        _, contents = dgraph_contents.split(',')
+        decoded = base64.b64decode(contents)
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+        partiCsv= pjoin(outDir, '.participants.csv')
+        df.to_csv(partiCsv, index= False)
+
+        exe= pjoin(SCRIPTDIR, 'combine_demography.py')
+        cmd= f'python {exe} -i {summaryCsv} -o {outDir} -p {partiCsv} -c "{control}"'
+        check_call(cmd, shell=True)
+
+
+        # python scripts/correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age
+        # -p participants.csv -o dem_corrected/
+        prefix= filename.split('.csv')[0]
+        outPrefix= pjoin(outDir, prefix)
+        exe= pjoin(SCRIPTDIR, 'correct_for_demography.py')
+        cmd= f'python {exe} -i {outPrefix}_combined.csv -c {outPrefix}_control.csv -p {partiCsv} -e "{effect}" ' \
+             f'-o {outDir}'
+        check_call(cmd, shell=True)
+
+        exog = '_'.join(effect.split('+'))
+        residuals= f'{outPrefix}_{exog}_residuals.csv'
+        # raw_contents being overwritten by residuals, our new feature for further analysis
+        df= pd.read_csv(residuals)
+
+        dfcombined= pd.read_csv(f'{outPrefix}_combined.csv')
+
+
+    subjects = df[df.columns[0]].values
+    regions = df.columns.values[1:]
+    options = [{'label': i, 'value': i} for i in regions]
+
+    # df is reset to residuals
     filename= pjoin(outDir, 'zscores.csv')
-    df_scores= df_raw.copy()
+    # this block has to be done after prediction and residuals
+    df_scores= df.copy()
     for column_name in regions:
         print(column_name)
-        _, inliers, zscores= plot_graph(df_raw, column_name)
+        _, inliers, zscores= plot_graph(df, column_name)
 
         # write outlier summary
         df_scores[column_name] = zscores
@@ -424,8 +566,16 @@ def analyze(raw_contents, delimiter, outDir, analyze):
 
     df_scores.to_csv(filename, index=False)
 
-
-    return (options, df_raw.to_dict('list'), subjects, True, {'display': 'block'})
+    # df.data will hold residuals= predicted-given
+    # dfcombined.data will hold a combined DataFrame of given and demographics
+    if dgraph_contents:
+        return (options, options,
+                df.to_dict('list'), dfcombined.to_dict('list'), subjects,
+                True, {'display': 'block'})
+    else:
+        return (options, options,
+                df.to_dict('list'), df.to_dict('list'), subjects,
+                True, {'display': 'block'})
 
 
 
@@ -519,10 +669,34 @@ def show_multiv_summary(df, outDir, activate, method, PERCENT_LOW, PERCENT_HIGH)
     return [multiv_summary.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
 
 
+
+# callback for compare_layout
+@app.callback(
+    [Output('stat-graph-compare', 'figure'),
+     Output('model-graph', 'figure'),
+     Output('model-summary', 'children')],
+    [Input('dfcombined','data'), Input('df','data'),
+     Input('region-compare', 'value'), Input('extent', 'value'),
+     Input('outDir','value')])
+def update_graph(df, df_resid, region, extent, outDir):
+
+    if not region:
+        raise PreventUpdate
+
+    df= pd.DataFrame(df)
+    df_resid= pd.DataFrame(df_resid)
+
+    fig, _, _ = plot_graph_compare(df, df_resid, region, extent)
+    model, summary = display_model(region, outDir)
+
+
+    return (fig, model, summary)
+
+
 # callback for graph_layout
 @app.callback(
     Output('stat-graph', 'figure'),
-    [Input('df','data'), Input('region','value'), Input('extent','value')])
+    [Input('dfcombined','data'), Input('region','value'), Input('extent','value')])
 def update_graph(df, region, extent):
 
     if not region:
@@ -659,10 +833,11 @@ def update_summary(subjects, outDir, extent, group_by):
 
 
 
-@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'multiv_layout']],
+@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout',
+                                                  'multiv_layout', 'compare_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
+    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(6)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
@@ -672,6 +847,8 @@ def display_page(pathname):
         display_layout[3] = {'display': 'auto'}
     elif pathname == '/multivar':
         display_layout[4] = {'display': 'auto'}
+    elif pathname == '/compare':
+        display_layout[5] = {'display': 'auto'}
     else:
         display_layout[0] = {'display': 'auto'}
 

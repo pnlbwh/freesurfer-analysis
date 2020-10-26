@@ -320,7 +320,7 @@ multiv_layout = html.Div(
             value='',
             debounce=True,
             id='higher',
-            #placeholder='HIGH'
+            # placeholder='HIGH'
         ),
         html.Br(),
         html.Div([

@@ -208,11 +208,12 @@ input_layout = html.Div(
         html.Br(),
         dcc.Link('See outliers summary', href='/summary'),
         html.Br(),
-        dcc.Link('See outliers in graphs', href='/graphs'),
+        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
         html.Br(),
         dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
-        dcc.Link('See GLM fitting summary', href='/compare'),
+        html.Br(),
+        dcc.Link('See outliers in graphs and GLM fitting', href='/compare'),
         html.Br(),
         html.Br(),
         html.Br(),
@@ -260,7 +261,7 @@ compare_layout = html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See uncorrected outliers in graphs', href='/graphs'),
+        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
         html.Br(),
         html.Br(),
 
@@ -292,7 +293,7 @@ table_layout= html.Div(
 
     dcc.Link('Go back to inputs', href='/user'),
     html.Br(),
-    dcc.Link('See outliers in graphs', href='/graphs'),
+    dcc.Link('See (raw) outliers in graphs', href='/graphs'),
     html.Br(),
     dcc.Link('See outliers summary', href='/summary'),
     html.Br(),
@@ -342,7 +343,7 @@ summary_layout = html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See outliers in graphs', href='/graphs'),
+        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
         html.Br(),
         dcc.Link('See outliers in table', href='/zscores'),
         html.Br(),
@@ -421,7 +422,7 @@ multiv_layout = html.Div(
             value='',
             debounce=True,
             id='higher',
-            #placeholder='HIGH'
+            # placeholder='HIGH'
         ),
         html.Br(),
         html.Div([

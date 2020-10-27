@@ -193,29 +193,31 @@ input_layout = html.Div(
             style={'float': 'center', 'display': 'inline-block'}),
 
         dcc.Loading(id='parse summary and compute zscore', fullscreen= True, debug=True, type='graph'),
-        html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
 
         # Other dcc.Input()
-
         dcc.Store(id='df'),
         dcc.Store(id='subjects'),
         dcc.Store(id='dfcombined'),
-
         # other dcc.Store()
 
-        html.Div(id='user-inputs'),
-
-        html.Br(),
-        dcc.Link('See outliers summary', href='/summary'),
-        html.Br(),
-        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
-        html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
-        html.Br(),
-        dcc.Link('See outliers in graphs and GLM fitting', id='compare-link', style={'display': 'none'}, href='/compare'),
-        html.Br(),
-        html.Br(),
-        dcc.Link('Perform multivariate analysis', id='multivar-link', style={'display':'none'}, href='/multivar'),
+        html.Div(id='results', children=[
+            html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
+            html.Br(),
+            dcc.Link('See outliers summary', href='/summary'),
+            html.Br(),
+            dcc.Link('See outliers in graphs and GLM fitting', id='compare-link', style={'display': 'none'}, href='/compare'),
+            # html.Br(),
+            dcc.Link('See (raw) outliers in graphs', href='/graphs'),
+            html.Br(),
+            dcc.Link('See outliers in table', href='/zscores'),
+            html.Br(),
+            html.Br(),
+            # using html.Button just for style's sake
+            html.Div([
+                html.Button(children=dcc.Link('Multivariate', href='/multivar'),
+                            title='Direct to multivariate analysis')],
+                style={'float': 'center', 'display': 'inline-block'})
+        ], style={'display': 'none'})
 
     ],
     style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
@@ -578,13 +580,13 @@ def analyze(raw_contents, filename, dgraph_contents, delimiter, outDir, effect, 
 
 
 
-@app.callback([Output('compare-link', 'style'), Output('multivar-link', 'style')],
+@app.callback([Output('results', 'style'), Output('compare-link', 'style')],
               [Input('participants','contents'), Input('dfcombined', 'data')])
 def display_link(dgraph_contents, df):
     if dgraph_contents and df:
         return ({'display':'block'}, {'display':'block'})
     elif df:
-        return ({'display':'none'}, {'display':'block'})
+        return ({'display':'block'}, {'display':'none'})
     else:
         raise PreventUpdate
 

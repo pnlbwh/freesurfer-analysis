@@ -47,7 +47,7 @@ input_layout = html.Div(
             children=html.Div([
                 'Drag and Drop or ',
                 html.A('Select Files'),
-                html.Div(id='filename'),
+                html.Div(id='filename', className='filename-class'),
             ]),
 
             style={
@@ -131,18 +131,19 @@ input_layout = html.Div(
                 id='participants',
                 children=html.Div([
                     'Drag and Drop or ',
-                    html.A('Select Files')
+                    html.A('Select Files'),
+                    html.Div(id='dgraph-filename', className='filename-class'),
                 ]),
 
                 style={
-                    'width': '30%',
-                    'height': '40px',  # height of the box
-                    'lineHeight': '40px',  # height of a carriage return
-                    'borderWidth': '1px',  # width of the border
+                    'width': '400px',
+                    'height': '60px',
+                    'borderWidth': '1px',
                     'borderStyle': 'dashed',
                     'borderRadius': '5px',  # curvature of the border
                     'textAlign': 'center',
-                    # 'margin': '10px'      # margin from left
+                    # 'margin': '10px',      # margin from left
+                    # 'lineHeight': '40px'   # height of a carriage return
                 },
             ),
 
@@ -484,9 +485,18 @@ app.layout = html.Div([
 
 # callback for uploaded file
 @app.callback(Output('filename', 'children'),
-              [Input('csv', 'contents'), Input('csv', 'filename')])
-def upload(status, filename):
-    if not status:
+              [Input('csv', 'filename')])
+def upload(filename):
+    if not filename:
+        raise PreventUpdate
+
+    return 'Loaded: '+filename
+
+# callback for uploaded file
+@app.callback(Output('dgraph-filename', 'children'),
+              [Input('participants', 'filename')])
+def upload(filename):
+    if not filename:
         raise PreventUpdate
 
     return 'Loaded: '+filename

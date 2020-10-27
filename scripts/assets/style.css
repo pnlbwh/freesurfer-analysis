@@ -18,7 +18,15 @@ body {
     display: none;
 }
 
-#filename {
+.filename-class {
     color: green;
     font-weight: bold;
+}
+
+#results {
+    border-color: green;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+    margin-top: 20px;
 }

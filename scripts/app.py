@@ -40,6 +40,9 @@ input_layout = html.Div(
     id= 'input_layout',
     children= [
 
+        # style={'color':'purple'} does not work
+        html.B('Mandatory inputs', id='m-inputs'),
+        html.Div(id='input-section', children=[
         'Text file with rows for subjects and columns for features ',
         html.Br(),
         dcc.Upload(
@@ -71,7 +74,7 @@ input_layout = html.Div(
             placeholder='Output directory ',
             debounce=True,
             style={
-                'width': '20%',
+                'width': '20vw',
                 # 'height': '40px',
                 # 'lineHeight': '40px',
                 'borderWidth': '1px',
@@ -102,6 +105,7 @@ input_layout = html.Div(
             value= 2,
             type= 'number'
         ),
+
         html.Br(),
         'Delimiter ',
         html.Br(),
@@ -118,14 +122,17 @@ input_layout = html.Div(
                 # 'margin': '10px'
             },
             value= 'comma'
-        ),
+        )]),
 
         html.Br(),
-        html.Br(),
 
-        html.Details(children=[
+        # style={'color':'darkgrey'} does not work
+        html.B('Optional inputs', id='o-inputs'),
+        html.Div(id='dgraph-section',
+            children= html.Details(children=[
             html.Summary('Demographics'),
-            'Demographic info csv file',
+            html.Br(),
+            'Text file with rows for subjects and columns for demographics ',
             html.Br(),
             dcc.Upload(
                 id='participants',
@@ -153,7 +160,7 @@ input_layout = html.Div(
             dcc.Input(
                 id='control',
                 style={
-                    'width': '20%',
+                    'width': '20vw',
                     # 'height': '40px',
                     # 'lineHeight': '40px',
                     'borderWidth': '1px',
@@ -171,7 +178,7 @@ input_layout = html.Div(
             dcc.Input(
                 id='effect',
                 style={
-                    'width': '20%',
+                    'width': '20vw',
                     # 'height': '40px',
                     # 'lineHeight': '40px',
                     'borderWidth': '1px',
@@ -182,9 +189,9 @@ input_layout = html.Div(
                 },
                 # value='checking_bin==3'
             ),
-        ]),
+        ])
+        ),
 
-        html.Br(),
         html.Br(),
         html.Div([
             html.Button(id='analyze',
@@ -201,13 +208,13 @@ input_layout = html.Div(
         dcc.Store(id='dfcombined'),
         # other dcc.Store()
 
+        html.Br(),
         html.Div(id='results', children=[
             html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
             html.Br(),
             dcc.Link('See outliers summary', href='/summary'),
             html.Br(),
             dcc.Link('See outliers in graphs and GLM fitting', id='compare-link', style={'display': 'none'}, href='/compare'),
-            # html.Br(),
             dcc.Link('See (raw) outliers in graphs', href='/graphs'),
             html.Br(),
             dcc.Link('See outliers in table', href='/zscores'),

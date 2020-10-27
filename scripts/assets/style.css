@@ -23,10 +23,34 @@ body {
     font-weight: bold;
 }
 
+
+#input-section {
+    border-color: purple;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+}
+
+#dgraph-section {
+    border-color: darkgrey;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+}
+
+
 #results {
     border-color: green;
     border-style: solid;
     width: fit-content;
     padding: 20px;
-    margin-top: 20px;
 }
+
+#m-inputs {
+    color: purple;
+}
+
+#o-inputs {
+    color: darkgrey;
+}
+

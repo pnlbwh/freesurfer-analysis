@@ -43,7 +43,7 @@ input_layout = html.Div(
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[
-        'Text file with rows for subjects and columns for features ',
+        'Text file with rows for subjects and columns for features',
         html.Br(),
         dcc.Upload(
             id='csv',
@@ -66,7 +66,7 @@ input_layout = html.Div(
         ),
 
         html.Br(),
-        'Output directory ',
+        'Enter output directory and press enter',
         html.Br(),
         dcc.Input(
             value='',
@@ -132,7 +132,7 @@ input_layout = html.Div(
             children= html.Details(children=[
             html.Summary('Demographics'),
             html.Br(),
-            'Text file with rows for subjects and columns for demographics ',
+            'Text file with rows for subjects and columns for demographics',
             html.Br(),
             dcc.Upload(
                 id='participants',
@@ -309,7 +309,9 @@ table_layout= html.Div(
     html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
-    'Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer',
+    'Enter freesurfer directory template and press enter',
+    html.Br(),
+    html.I('Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer'),
     html.Br(),
     dcc.Input(
         value='',

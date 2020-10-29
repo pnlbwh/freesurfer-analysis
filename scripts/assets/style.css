@@ -54,3 +54,11 @@ body {
     color: darkgrey;
 }
 
+hr {
+    border-top: 5px solid #E1E1E1;
+}
+
+
+.path-selector {
+    width: 40vw;
+}

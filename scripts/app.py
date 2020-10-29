@@ -39,7 +39,26 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 input_layout = html.Div(
     id= 'input_layout',
     children= [
+        html.Img(src='https://raw.githubusercontent.com/pnlbwh/freesurfer-analysis/multi-user/docs/pnl-bwh-hms.png'),
+        dcc.Markdown(
+"""[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3762476.svg)](https://doi.org/10.5281/zenodo.3762476) [![Python](https://img.shields.io/badge/Python-3.6-green.svg)]() [![Platform](https://img.shields.io/badge/Platform-linux--64%20%7C%20osx--64%20%7C%20win--64-orange.svg)]()
 
+Billah, Tashrif; Bouix, Sylvain; *FreeSurfer outlier analysis tool*, https://github.com/pnlbwh/freesurfer-analysis, 2020, 
+DOI: 10.5281/zenodo.3762476
+
+---
+
+Input to the tool is a summary table with rows for subjects and columns for regions obtained from FreeSurfer statistics 
+of a set of subjects. Although the tool is developed for analyzing FreeSurfer statistics, it can be readily employed with  
+other statistics having a summary table such as those obtained from Tract-Based Spatial Statistics (TBSS) study.
+
+* Input can be provided from PNL server or your computer. However, output is always written to PNL server.
+* If demographic information is provided, then outliers are corrected considering their effect.
+* It can render static ROI snapshots on the webpage.
+"""
+        ),
+
+        html.Hr(),
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[
@@ -267,7 +286,7 @@ input_layout = html.Div(
             dcc.Link('See outliers in graphs and GLM fitting', id='compare-link', style={'display': 'none'}, href='/compare'),
             dcc.Link('See (raw) outliers in graphs', href='/graphs'),
             html.Br(),
-            dcc.Link('See outliers in table', href='/zscores'),
+            dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
             html.Br(),
             html.Br(),
             # using html.Button just for style's sake
@@ -288,7 +307,7 @@ graph_layout= html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
+        dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
         html.Br(),
         dcc.Link('See outliers summary', href='/summary'),
         html.Br(),
@@ -405,7 +424,7 @@ summary_layout = html.Div(
         html.Br(),
         dcc.Link('See (raw) outliers in graphs', href='/graphs'),
         html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
+        dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
         html.Br(),
         'Group outliers by: ',
         html.Div([

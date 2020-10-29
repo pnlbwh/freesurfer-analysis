@@ -7,8 +7,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash_table import DataTable
 from dash.exceptions import PreventUpdate
-from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs, getenv, remove
+from os.path import isfile, isdir, abspath, join as pjoin, dirname, splitext, basename
+from os import makedirs, getenv, remove, listdir
 from scipy.spatial.distance import mahalanobis
 from scipy.stats import scoreatpercentile
 from sklearn.ensemble import IsolationForest
@@ -43,14 +43,39 @@ input_layout = html.Div(
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[
-        'Text file with rows for subjects and columns for features',
-        html.Br(),
-        dcc.Upload(
+
+            'Text file with rows for subjects and columns for features',
+            html.Br(),
+            html.Details(children= [
+                html.Summary('From PNL server'),
+                html.Br(),
+                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                dcc.Dropdown(
+                    id='filename-dropdown',
+                    options=[{'label': '', 'value': '/'}],
+                    value='',
+                    placeholder= '/abs/path/to/file (*csv,*tsv)',
+                    className= 'path-selector'
+                ),
+
+                html.Div(id='dropdown-select', className='filename-class')
+            ]),
+
+            html.Br(),
+            html.B('OR'),
+            html.Br(),
+            html.Br(),
+
+            html.Details(children= [
+            html.Summary('From your computer'),
+            html.Br(),
+            dcc.Upload(
             id='csv',
             children=html.Div([
                 'Drag and Drop or ',
                 html.A('Select Files'),
-                html.Div(id='filename', className='filename-class'),
+                html.Div(id='filename-select', className='filename-class'),
             ]),
 
             style={
@@ -62,10 +87,10 @@ input_layout = html.Div(
                 'textAlign': 'center',
                 # 'margin': '10px',      # margin from left
                 # 'lineHeight': '40px'   # height of a carriage return
-            },
-        ),
+            }
+            )]),
 
-        html.Br(),
+        html.Hr(),
         'Enter output directory and press enter',
         html.Br(),
         dcc.Input(
@@ -134,27 +159,52 @@ input_layout = html.Div(
             html.Br(),
             'Text file with rows for subjects and columns for demographics',
             html.Br(),
-            dcc.Upload(
-                id='participants',
-                children=html.Div([
-                    'Drag and Drop or ',
-                    html.A('Select Files'),
-                    html.Div(id='dgraph-filename', className='filename-class'),
-                ]),
 
-                style={
-                    'width': '400px',
-                    'height': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',  # curvature of the border
-                    'textAlign': 'center',
-                    # 'margin': '10px',      # margin from left
-                    # 'lineHeight': '40px'   # height of a carriage return
-                },
-            ),
+            html.Details(children=[
+                html.Summary('From PNL server'),
+                html.Br(),
+                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                dcc.Dropdown(
+                    id='dgraph-dropdown',
+                    options=[{'label': '', 'value': '/'}],
+                    value='',
+                    placeholder='/abs/path/to/file (*csv,*tsv)',
+                    className= 'path-selector'
+                ),
+
+                html.Div(id='dgraph-dropdown-select', className='filename-class')
+            ]),
 
             html.Br(),
+            html.B('OR'),
+            html.Br(),
+            html.Br(),
+
+            html.Details(children=[
+                html.Summary('From your computer'),
+                html.Br(),
+                dcc.Upload(
+                    id='participants',
+                    children=html.Div([
+                        'Drag and Drop or ',
+                        html.A('Select Files'),
+                        html.Div(id='dgraph-filename-select', className='filename-class'),
+                    ]),
+
+                    style={
+                        'width': '400px',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'dashed',
+                        'borderRadius': '5px',  # curvature of the border
+                        'textAlign': 'center',
+                        # 'margin': '10px',      # margin from left
+                        # 'lineHeight': '40px'   # height of a carriage return
+                    }
+                )]),
+
+            html.Hr(),
             'Control group',
             html.Br(),
             dcc.Input(
@@ -491,9 +541,33 @@ app.layout = html.Div([
 ])
 
 
+# callback for selected file
+@app.callback(Output('dropdown-select', 'children'),
+              [Input('filename-dropdown', 'value')])
+def upload(filename):
+
+    if isfile(filename):
+        ext= splitext(filename)[-1]
+        if ext in ['.csv', '.txt', '.tsv']:
+            return 'Selected: '+filename
+    else:
+        raise PreventUpdate
+
+# callback for selected file
+@app.callback(Output('dgraph-dropdown-select', 'children'),
+              [Input('dgraph-dropdown', 'value')])
+def upload(filename):
+
+    if isfile(filename):
+        ext = splitext(filename)[-1]
+        if ext in ['.csv', '.txt', '.tsv']:
+            return 'Selected: ' + filename
+    else:
+        raise PreventUpdate
+
 
 # callback for uploaded file
-@app.callback(Output('filename', 'children'),
+@app.callback(Output('filename-select', 'children'),
               [Input('csv', 'filename')])
 def upload(filename):
     if not filename:
@@ -502,7 +576,7 @@ def upload(filename):
     return 'Loaded: '+filename
 
 # callback for uploaded file
-@app.callback(Output('dgraph-filename', 'children'),
+@app.callback(Output('dgraph-filename-select', 'children'),
               [Input('participants', 'filename')])
 def upload(filename):
     if not filename:
@@ -511,38 +585,86 @@ def upload(filename):
     return 'Loaded: '+filename
 
 
+
+# searchable and dynamically updating dropdown menu
+@app.callback(Output('filename-dropdown', 'options'),
+              [Input('filename-dropdown', 'search_value')])
+def list_dir(dir):
+
+    if not (dir and isdir(dir)):
+        raise PreventUpdate
+
+    dirdict= [{'label':dir, 'value':dir}]
+    for d in listdir(dir):
+        attr= pjoin(dir, d)
+        dirdict.append({'label': attr, 'value': attr})
+
+    return dirdict
+
+
+# searchable and dynamically updating dropdown menu
+@app.callback(Output('dgraph-dropdown', 'options'),
+              [Input('dgraph-dropdown', 'search_value')])
+def list_dir(dir):
+
+    if not (dir and isdir(dir)):
+        raise PreventUpdate
+
+    dirdict= [{'label':dir, 'value':dir}]
+    for d in listdir(dir):
+        attr= pjoin(dir, d)
+        dirdict.append({'label': attr, 'value': attr})
+
+    return dirdict
+
+
 # callback for input_layout / GLM analysis
 # df.data will hold residuals= predicted-given
 # dfcombined.data will hold a combined DataFrame of given and demographics
 @app.callback([Output('region', 'options'), Output('region-compare', 'options'),
                Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
-              [Input('csv','contents'), Input('csv','filename'),
-               Input('participants','contents'), Input('delimiter','value'),
-               Input('outDir', 'value'),
+              [Input('csv','contents'), Input('csv','filename'), Input('filename-dropdown', 'value'),
+               Input('participants','contents'), Input('dgraph-dropdown', 'value'),
+               Input('delimiter','value'), Input('outDir', 'value'),
                Input('effect','value'), Input('control','value'),
                Input('analyze', 'n_clicks')])
-def analyze(raw_contents, filename, dgraph_contents, delimiter, outDir, effect, control, analyze):
+def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_server_filename,
+            delimiter, outDir, effect, control, analyze):
 
     if not analyze:
         raise PreventUpdate
 
-    _, contents = raw_contents.split(',')
-    decoded = base64.b64decode(contents)
-    df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+    if server_filename:
+        # load from PNL server
+        df=pd.read_csv(server_filename)
+        filename= basename(server_filename)
+
+    else:
+        # load from your computer
+        _, contents = raw_contents.split(',')
+        decoded = base64.b64decode(contents)
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
 
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
 
-    if dgraph_contents:
+    if dgraph_contents or dgraph_server_filename:
+        # when loaded through dcc.Upload(), Dash app will not have any knowledge of input path
+        # so save the content of filename in outDir so that can be used for further analysis
         summaryCsv= pjoin(outDir, filename)
         df.to_csv(summaryCsv, index= False)
 
-        _, contents = dgraph_contents.split(',')
-        decoded = base64.b64decode(contents)
-        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+        if dgraph_server_filename:
+            df= pd.read_csv(dgraph_server_filename)
+
+        else:
+            _, contents = dgraph_contents.split(',')
+            decoded = base64.b64decode(contents)
+            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+
         partiCsv= pjoin(outDir, '.participants.csv')
         df.to_csv(partiCsv, index= False)
 
@@ -600,9 +722,9 @@ def analyze(raw_contents, filename, dgraph_contents, delimiter, outDir, effect, 
 
 
 @app.callback([Output('results', 'style'), Output('compare-link', 'style')],
-              [Input('participants','contents'), Input('dfcombined', 'data')])
-def display_link(dgraph_contents, df):
-    if dgraph_contents and df:
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+def display_link(dgraph_contents, df, dgraph_server_filename):
+    if (dgraph_contents or dgraph_server_filename) and df:
         return ({'display':'block'}, {'display':'block'})
     elif df:
         return ({'display':'block'}, {'display':'none'})

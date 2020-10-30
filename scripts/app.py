@@ -39,6 +39,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 input_layout = html.Div(
     id= 'input_layout',
     children= [
+        html.Div(children= [
         html.Img(src='https://raw.githubusercontent.com/pnlbwh/freesurfer-analysis/multi-user/docs/pnl-bwh-hms.png'),
         dcc.Markdown(
 """[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3762476.svg)](https://doi.org/10.5281/zenodo.3762476) [![Python](https://img.shields.io/badge/Python-3.6-green.svg)]() [![Platform](https://img.shields.io/badge/Platform-linux--64%20%7C%20osx--64%20%7C%20win--64-orange.svg)]()
@@ -48,17 +49,21 @@ DOI: 10.5281/zenodo.3762476
 
 ---
 
-Input to the tool is a summary table with rows for subjects and columns for regions obtained from FreeSurfer statistics 
-of a set of subjects. Although the tool is developed for analyzing FreeSurfer statistics, it can be readily employed with  
+**freesurfer-analysis** is an interactive statistics visualization tool. Assuming the statistics are normally distributed, 
+elements in the statistics beyond ±2 standard deviations are classified as outliers. 
+Input to the tool is a summary table with **rows for subjects** and **columns for regions** obtained from FreeSurfer statistics 
+of a set of subjects. Although the tool is developed for analyzing FreeSurfer statistics, it can be readily employed with 
 other statistics having a summary table such as those obtained from Tract-Based Spatial Statistics (TBSS) study.
 
 * Input can be provided from PNL server or your computer. However, output is always written to PNL server.
+    * When on a PNL workstation or HPC node through NoMachine, use **From PNL server** option
+    * When data is totally in your laptop, use **From your computer** option
 * If demographic information is provided, then outliers are corrected considering their effect.
-* It can render static ROI snapshots on the webpage.
-"""
-        ),
+* If FreeSurfer directory template is provided, static ROI snapshots are rendered.
+"""),
+        html.Hr(),], id='introduction'),
 
-        html.Hr(),
+
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[

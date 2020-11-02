@@ -49,17 +49,17 @@ python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs
 
 * Enable roi rendering (for FreeSurfer only) with visualization:
 
-> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t path\to\sub-$\anat\freesurfer
+> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t path\to\sub-*\anat\freesurfer
     
 
 * Generate input table from FreeSurfer statistics:
 
-> python scripts\stats2table.py -c path\to\caselist.txt -t path\to\sub-$\anat\freesurfer -o \tmp\fs-stats
+> python scripts\stats2table.py -c path\to\caselist.txt -t path\to\sub-*\anat\freesurfer -o \tmp\fs-stats
 
 
 # Effect of demographics
 
-Visualize effect of demographics on a web browser (http://localhost:8054):
+Visualize effect of demographics on a web browser (http://localhost:8053)
 
 ## Perform analysis
 

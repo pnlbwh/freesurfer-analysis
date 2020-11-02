@@ -50,7 +50,7 @@ DOI: 10.5281/zenodo.3762476
 ---
 
 **freesurfer-analysis** is an interactive statistics visualization tool. Assuming the statistics are normally distributed, 
-elements in the statistics beyond ±2 standard deviations are classified as outliers. 
+elements in the statistics beyond ±2 standard deviations are classified as outliers. More details about the tool can be found [here](https://github.com/pnlbwh/freesurfer-analysis/blob/multi-user-dgraph/docs/description.pdf).
 Input to the tool is a summary table with **rows for subjects** and **columns for regions** obtained from FreeSurfer statistics 
 of a set of subjects. Although the tool is developed for analyzing FreeSurfer statistics, it can be readily employed with 
 other statistics having a summary table such as those obtained from Tract-Based Spatial Statistics (TBSS) study.

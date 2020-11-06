@@ -7,11 +7,19 @@ Developed by Tashrif Billah and Sylvain Bouix, Brigham and Women's Hospital (Har
 
 Table of Contents
 =================
-    
-   * [Citation](#citation) 
+
+   * [Citation](#citation)
    * [Installation](#installation)
-   * [Running](#running)
+   * [Input preparation](#input-preparation)
+   * [GUI](#gui)
+   * [Interpret results](#interpret-results)
+      * [Graph interpretation](#graph-interpretation)
+      * [Summary interpretation](#summary-interpretation)
+   * [CLI](#cli)
+      * [Independent analysis](#independent-analysis)
+      * [Effect of demographics](#effect-of-demographics)
    * [Troubleshooting](#troubleshooting)
+   * [Reference](#reference)
 
 Table of Contents created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 

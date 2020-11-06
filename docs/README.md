@@ -76,7 +76,7 @@ Follow the direction in the webpage to be able to run the tool:
 
 ![](input_section.PNG)
 
-After analyzing your input, a results section should appear that you can browse through:
+After analyzing your input, a result section should appear that you can browse through:
 
 ![](result_section.PNG)
 

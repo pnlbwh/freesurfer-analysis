@@ -36,88 +36,53 @@ On Python 3, installation of dependencies can be as simple as:
     
     pip install -r requirements.txt
 
-# Running
-
-* Visualize summary on a web browser (http://localhost:8050):
-
-```bash
-# comma separted (default)
-python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\
-# tab separated
-python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs-stats\
-```
-
-* Enable roi rendering (for FreeSurfer only) with visualization:
-
-> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t path\to\sub-*\anat\freesurfer
-    
+# Input preparation
 
 * Generate input table from FreeSurfer statistics:
 
 > python scripts\stats2table.py -c path\to\caselist.txt -t path\to\sub-*\anat\freesurfer -o \tmp\fs-stats
 
 
-# Effect of demographics
 
-Visualize effect of demographics on a web browser (http://localhost:8053)
+# GUI
 
-## Perform analysis
+*Graphical user interface*
 
-> python scripts\demography-effect.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3" --effect age
+All users can access the web application at https://pnlservers.bwh.harvard.edu/dash/ . The web application will write 
+outputs to a directory of your choice in the PNL file system--`/rfanfs/` or `/data/pnl/`. You do not need VPN or SSH 
+to access the web application. However, you need a username and password which can be obtained by 
+emailing sylvain@bwh.harvard.edu
 
-The above command comprises the following steps. They are noted here in case it helps debugging any issue.
+Alternatively, you can launch the web application at your lab as follows:
 
-* combine demography
+    export PORT=8050
+    export DASH_URL_BASE_PATHNAME=/dash/
+    
+    python scripts/app.py
+    firefox http://localhost:${PORT}/${DASH_URL_BASE_PATHNAME}
 
-> python scripts\combine_demography.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3"
+The default is http://localhost:8050
 
-More examples for the `-c` group:
 
-```bash
-"age>40 and age<50"
-"age>50"
-"race==hispanic"
-"race==hispanic or (age>40 and age<50)"
-"checkin_bin==3"
-"sex==M"
-```
+Follow the direction in the webpage to be able to run the tool:
 
-`participants.csv` file contain demographic information of the research subjects:
+![](input_section.PNG)
 
-![](./demographics.PNG)
+After analyzing your input, a results section should appear that you can browse through:
 
-* fit Generalized Linear Model
+![](result_section.PNG)
 
-Python package [statsmodels](https://www.statsmodels.org/dev/glm.html) is used to fit a Generalized Linear Model (GLM) on the data. 
-We fit a GLM with identity (linear) link and assume the response variables are normally distributed.
 
-> python scripts\correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age -p participants.csv 
--o dem_corrected/
+**NOTE** Browser back and refresh buttons won't work. Please use the hyperlinks in the page for navigation.  
 
-More examples for `-e` demographic variables:
 
-```bash
-age
-age + weight
-age + weight + ethnicity
-```
+# Interpret results
 
-* obtain and view summary
+Most results should be self explanatory except the effect of demographics. Outliers are corrected considering the effect 
+of demographic information only if you provide inputs in the `Demographics` section. Please see below for direction about 
+interpreting effect of demographics.
 
-> python scripts\generate-summary.py -i asegstats_age_residuals.csv -o dem_corrected/
-
-As before, you can view the summary on http://localhost:8050
-
-* compare uncorrected and corrected outliers
-
-> python scripts\compare_correction.py -i asegstats_combined.csv -c asegstats_age_residuals.csv -p participants.csv 
--o dem_corrected/
-
-Open http://localhost:8053 to view the effect of demographics
-
-## Interpret results
-
-### Graph interpretation
+## Graph interpretation
 
 * inliers and outliers
 
@@ -188,7 +153,7 @@ largely deviates from the expected slope in the Q-Q plot:
 ![](bad_residuals.PNG)
 
 
-### Summary interpretation
+## Summary interpretation
 
 Interpreting model summary requires some degree of statistical knowledge. However, a few generalized direction is 
 provided at the end of the summary that can be utilized to interpret goodness of fit.
@@ -266,6 +231,94 @@ Df Residuals and Df Model are explained [here](https://www.statsmodels.org/dev/g
 * Psuedo R^2
 
 `llr_pvalue` and `Psuedo R^2` are explained [here](https://github.com/statsmodels/statsmodels/blob/bfa3e69c42ca1c9411af38b55494c3e0f70acc3c/statsmodels/base/model.py#L2437)
+
+
+
+# CLI
+
+*Command line interface*
+
+This section is meant for developers. The scripts used here have been merged to `app.py` and so are not actively maintained. 
+However, they can facilitate testing or serve as a fallback option if GUI does not work.
+
+
+
+## Independent analysis
+
+* Visualize summary on a web browser (http://localhost:8050):
+
+```bash
+# comma separted (default)
+python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\
+# tab separated
+python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs-stats\
+```
+
+* Enable roi rendering (for FreeSurfer only) with visualization:
+
+> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t path\to\sub-*\anat\freesurfer
+    
+
+
+## Effect of demographics
+
+Visualize effect of demographics on a web browser (http://localhost:8053)
+
+
+> python scripts\demography-effect.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3" --effect age
+
+The above command comprises the following steps. They are noted here in case it helps debugging any issue.
+
+* combine demography
+
+> python scripts\combine_demography.py -i asegstats.csv -o dem_corrected/ -p participants.csv -c "checkin_bin==3"
+
+More examples for the `-c` group:
+
+```bash
+"age>40 and age<50"
+"age>50"
+"race==hispanic"
+"race==hispanic or (age>40 and age<50)"
+"checkin_bin==3"
+"sex==M"
+```
+
+`participants.csv` file contain demographic information of the research subjects:
+
+![](./demographics.PNG)
+
+* fit Generalized Linear Model
+
+Python package [statsmodels](https://www.statsmodels.org/dev/glm.html) is used to fit a Generalized Linear Model (GLM) on the data. 
+We fit a GLM with identity (linear) link and assume the response variables are normally distributed.
+
+> python scripts\correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age -p participants.csv 
+-o dem_corrected/
+
+More examples for `-e` demographic variables:
+
+```bash
+age
+age + weight
+age + weight + ethnicity
+```
+
+* obtain and view summary
+
+> python scripts\generate-summary.py -i asegstats_age_residuals.csv -o dem_corrected/
+
+As before, you can view the summary on http://localhost:8050
+
+* compare uncorrected and corrected outliers
+
+> python scripts\compare_correction.py -i asegstats_combined.csv -c asegstats_age_residuals.csv -p participants.csv 
+-o dem_corrected/
+
+Open http://localhost:8053 to view the effect of demographics
+
+
+
 
 
 

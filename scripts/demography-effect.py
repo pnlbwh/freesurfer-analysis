@@ -82,7 +82,9 @@ In total, its purpose is to calculate outliers incorporating demographics and di
     # force the pipeline to wait because outlier.csv is required in the subsequent step
     # if not put to sleep, then it would progress to compare_correction right away
     # and raise EnvironmentError for compare_port
-    sleep(60)
+    sleep_time= 60
+    print(f'\nWaiting {sleep_time} seconds for previous job to complete ...\n')
+    sleep(sleep_time)
     while 1:
         if isfile(pjoin(args.output,'outliers.csv')):
             break

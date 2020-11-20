@@ -174,8 +174,11 @@ if __name__ == '__main__':
 
     Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'analyze-stats.py'),
                     '-i', abspath(args.input), '-d', args.delimiter, '-o', outDir, '-e', str(args.extent)]), shell=True)
-    
-    sleep(60)
+
+    sleep_time= 60
+    print(f'\nWaiting {sleep_time} seconds for previous job to complete ...\n')
+    sleep(sleep_time)
+
     df= pd.read_csv(outliers)
 
     # webbrowser.open_new(f'http://localhost:{summary_port}')

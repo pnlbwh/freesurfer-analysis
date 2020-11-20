@@ -28,9 +28,9 @@ if __name__ == '__main__':
     parser= argparse.ArgumentParser(description='Demonstrate outliers of FreeSurfer statistics in an interactive table')
     parser.add_argument('-i', '--input', required=True, help='a csv file containing region based zscores')
     parser.add_argument('-t', '--template',
-                        help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
-                             '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
-                             'where $ sign is the placeholder for subject id '
+                        help='freesurfer directory pattern enclosed in double quotes e.g. '
+                             '"/path/to/*/freesurfer" or "/path/to/derivatives/pnlpipe/sub-*/anat/freesurfer", '
+                             'where * is the placeholder for subject id '
                              'ROI rendering is disabled if not provided')
     parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
@@ -126,9 +126,9 @@ if __name__ == '__main__':
             if not args.template:
                 return
             # nilearn or freeview rendering
-            fsdir= args.template.replace('$', str(subjects[temp['row']]))
+            fsdir = args.template.replace('sub-*/', 'sub-{}/'.format(subjects[temp['row']]))
             if isdir(fsdir):
-                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
+                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view_roi.py'), '-o', dirname(args.input),
                                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
     app.run_server(debug=False, port= table_port, host= 'localhost')

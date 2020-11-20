@@ -1,0 +1,69 @@
+body {
+    margin: 20px;
+}
+
+#cmd {
+    font-family: Georgia;
+    color: blue;
+    border: red;
+    border-style: dashed;
+    width: fit-content;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+#analyze-status {
+    color: green;
+    font-weight: bold;
+    display: none;
+}
+
+.filename-class {
+    color: green;
+    font-weight: bold;
+}
+
+
+#input-section {
+    border-color: purple;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+}
+
+#dgraph-section {
+    border-color: darkgrey;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+}
+
+
+#results {
+    border-color: green;
+    border-style: solid;
+    width: fit-content;
+    padding: 20px;
+}
+
+#m-inputs {
+    color: purple;
+}
+
+#o-inputs {
+    color: darkgrey;
+}
+
+hr {
+    border-top: 5px solid #E1E1E1;
+}
+
+
+.path-selector {
+    width: 40vw;
+}
+
+
+#introduction {
+    width: 70vw;
+}

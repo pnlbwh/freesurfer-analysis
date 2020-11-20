@@ -1,4 +1,5 @@
 pandas
 statsmodels
 dash
-git+https://github.com/pnlbwh/conversion.git
+nilearn
+matplotlib

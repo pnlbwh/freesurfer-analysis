@@ -4,16 +4,18 @@ from tempfile import TemporaryDirectory, mkdtemp
 from os.path import isdir, join as pjoin, abspath
 from os import symlink, makedirs, environ
 from subprocess import check_call, Popen
-from conversion import read_cases
 import argparse
 from shutil import rmtree
 
 def stats2table(caselist, template, outDir, measure='volume', delimiter='comma'):
 
     tmpdir= mkdtemp()
-        
-    for c in read_cases(caselist):
-        fsdir = template.replace('$', c)
+
+    with open(caselist) as f:
+        cases= [c.strip() for c in f.read().strip().split()]
+
+    for c in cases:
+        fsdir = template.replace('*', c)
         if isdir(fsdir):
             symlink(fsdir, pjoin(tmpdir, c))
 
@@ -40,9 +42,9 @@ if __name__== '__main__':
     parser.add_argument('-c', '--caselist', required=False,
                         help='subject ids from the caselist are used in template to obtain valid freesurfer directory')
     parser.add_argument('-t', '--template', required=False,
-                        help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
-                             '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
-                             'where $ sign is the placeholder for subject id')
+                        help='freesurfer directory pattern enclosed in double quotes e.g. '
+                             '"/path/to/*/freesurfer" or "/path/to/derivatives/pnlpipe/sub-*/anat/freesurfer", '
+                             'where * is the placeholder for subject id')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
     parser.add_argument('-d', '--delimiter', default='comma', help='delimiter to use between measures in the output table '
                                                                    '{comma,tab,space,semicolon}, default: %(default)s')

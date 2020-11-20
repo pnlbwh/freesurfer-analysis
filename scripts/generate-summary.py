@@ -91,7 +91,7 @@ def show_stats_table(graphs, table):
         # open localhost:table_port
         Popen(' '.join(['python', pjoin(dirname(abspath(__file__)), 'show-stats-table.py'),
                         '-i', outliers,
-                        f'-t {args.template}' if args.template else '',
+                        f'-t "{args.template}"' if args.template else '',
                         '-e', str(args.extent)]), shell=True)
 
         sleep(10)
@@ -149,9 +149,9 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--extent', type=float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
     parser.add_argument('-t', '--template', required=False,
-                        help='freesurfer directory pattern i.e. /path/to/$/freesurfer or '
-                             '/path/to/derivatives/pnlpipe/sub-$/anat/freesurfer, '
-                             'where $ sign is the placeholder for subject id '
+                        help='freesurfer directory pattern enclosed in double quotes e.g. '
+                             '"/path/to/*/freesurfer" or "/path/to/derivatives/pnlpipe/sub-*/anat/freesurfer", '
+                             'where * is the placeholder for subject id '
                              'ROI rendering is disabled if not provided')
 
     # df = pd.read_csv('C://Users/tashr/Documents/fs-stats/outliers.csv')

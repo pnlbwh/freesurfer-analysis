@@ -48,7 +48,7 @@ On Python 3, installation of dependencies can be as simple as:
 
 * Generate input table from FreeSurfer statistics:
 
-> python scripts\stats2table.py -c path\to\caselist.txt -t path\to\sub-*\anat\freesurfer -o \tmp\fs-stats
+> python scripts\stats2table.py -c path\to\caselist.txt -t "path\to\sub-*\anat\freesurfer" -o \tmp\fs-stats
 
 
 
@@ -264,7 +264,7 @@ python scripts\generate-summary.py -i path\to\asegstats_lh.csv -t tab -o \tmp\fs
 
 * Enable roi rendering (for FreeSurfer only) with visualization:
 
-> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t path\to\sub-*\anat\freesurfer
+> python scripts\generate-summary.py -i path\to\asegstats_lh.csv -o \tmp\fs-stats\ -t "path\to\sub-*\anat\freesurfer"
     
 
 

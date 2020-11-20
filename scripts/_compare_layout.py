@@ -61,10 +61,8 @@ def plot_graph_compare(df, df_resid, region, NUM_STD=2):
         # outliers_corrected= abs(zscore(df_resid[region].values)) > NUM_STD
         # inliers = ~np.logical_and(~inliers, outliers_corrected)
 
-        # correct both, change of some inliers and outliers
-        # identifiable by color only, disregard the acceptable range of NUM_STD
-        # original zscores are preserved
-        # should be the best logic
+        # correct both--change of some inliers and outliers
+        # new outliers are identifiable by color
         inliers= abs(zscore(df_resid[region].values)) <= NUM_STD
 
     fig = go.Figure({
@@ -256,50 +254,4 @@ Direction for interpreting model (there is no single right answer)
 '''
 
     return (fig, desc)
-
-# if __name__ == '__main__':
-#
-#     parser= argparse.ArgumentParser(
-#         description='Visually compare raw outliers against demographic variable corrected ones')
-#
-#     parser.add_argument('-i', '--input', required=True, help='a csv/tsv file containing region based statistics')
-#     parser.add_argument('-c', '--corrected', required=True,
-#                         help='a *_residual.csv file that was obtained after correcting statistics for demographic variable(s)')
-#     parser.add_argument('-p', '--participants', required=True,
-#                         help='a csv file containing demographic info, demographic variable names are learnt from this file, '
-#                              'properties in the first row cannot have space or dash in them')
-#     parser.add_argument('-d', '--delimiter', default='comma', help='delimiter used between measures in the --input '
-#                                                                    '{comma,tab,space,semicolon}, default: %(default)s')
-#     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
-#     parser.add_argument('-e', '--extent', type= float, default=2, help='values beyond mean \u00B1 e*STD are outliers, if e<5; '
-#                         'values beyond e\'th percentile are outliers, if e>70; default %(default)s')
-#
-#     args= parser.parse_args()
-#     outDir= abspath(args.output)
-#     if not isdir(outDir):
-#         makedirs(outDir, exist_ok= True)
-#
-#     df = pd.read_csv(abspath(args.input),sep=delimiter_dict[args.delimiter])
-#     df_demograph = pd.read_csv(abspath(args.participants))
-#     demographs = df_demograph.columns[1:]
-#
-#     regions = [var for var in df.columns.values[1:] if var not in demographs]
-#     subjects = df[df.columns[0]].values
-#
-#     df_resid= pd.read_csv(abspath(args.corrected))
-#
-#     # generate all figures
-#     df_inliers= df.copy()
-#     # the below overwrite is for debugging only
-#     # regions=['CSF', 'Brain-Stem', 'Left-Accumbens-area']
-#     for column_name in regions:
-#         print(column_name)
-#         _, inliers, zscores= plot_graph(column_name, args.extent)
-#
-#         # write outlier summary
-#         df_inliers[column_name] = zscores
-#
-#
-#     df_inliers.to_csv(pjoin(outDir, 'outliers.csv'), index=False)
-
 

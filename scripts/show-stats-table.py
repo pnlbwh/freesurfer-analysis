@@ -126,9 +126,9 @@ if __name__ == '__main__':
             if not args.template:
                 return
             # nilearn or freeview rendering
-            fsdir= args.template.replace('$', str(subjects[temp['row']]))
+            fsdir = args.template.replace('sub-*/', 'sub-{}/'.format(subjects[temp['row']]))
             if isdir(fsdir):
-                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view-roi.py'),
+                check_call(' '.join(['python', pjoin(dirname(abspath(__file__)), 'view_roi.py'), '-o', dirname(args.input),
                                      '-i', fsdir, '-l', temp['column_id'], '-v', view_type]), shell=True)
 
     app.run_server(debug=False, port= table_port, host= 'localhost')

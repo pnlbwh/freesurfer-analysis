@@ -3,6 +3,7 @@
 import argparse
 from os.path import isfile, isdir, abspath, dirname, basename, join as pjoin, splitext
 from os import makedirs, remove
+from time import sleep
 SCRIPTDIR=dirname(abspath(__file__))
 from subprocess import check_call, Popen
 from verify_ports import get_ports
@@ -77,6 +78,13 @@ In total, its purpose is to calculate outliers incorporating demographics and di
     cmd= f'python {exe} -i {residuals} -e {args.extent} -o {args.output} -t {args.template}'
     Popen(cmd, shell=True)
 
+
+    # force the pipeline to wait because outlier.csv is required in the subsequent step
+    # if not put to sleep, then it would progress to compare_correction right away
+    # and raise EnvironmentError for compare_port
+    sleep_time= 60
+    print(f'\nWaiting {sleep_time} seconds for previous job to complete ...\n')
+    sleep(sleep_time)
     while 1:
         if isfile(pjoin(args.output,'outliers.csv')):
             break

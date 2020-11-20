@@ -17,7 +17,7 @@ import numpy as np
 import argparse
 import logging
 
-from analyze_stats_graphs import plot_graph, show_table
+from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
 from _compare_layout import plot_graph_compare, display_model
 
@@ -112,6 +112,9 @@ input_layout = html.Div(
 
         html.Br(),
         html.Br(),
+
+        html.Details(children=[
+        html.Summary('Demographics'),
         'Demographic info csv file',
         html.Br(),
         dcc.Upload(
@@ -168,7 +171,7 @@ input_layout = html.Div(
             },
             # value='checking_bin==3'
         ),
-
+        ]),
 
         html.Br(),
         html.Br(),
@@ -654,4 +657,4 @@ def display_page(pathname):
 
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=8050, host='localhost')
+    app.run_server(debug=True, host='localhost')

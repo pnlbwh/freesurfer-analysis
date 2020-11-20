@@ -7,8 +7,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash_table import DataTable
 from dash.exceptions import PreventUpdate
-from os.path import isfile, isdir, abspath, join as pjoin, dirname
-from os import makedirs, getenv, remove
+from os.path import isfile, isdir, abspath, join as pjoin, dirname, splitext, basename
+from os import makedirs, getenv, remove, listdir
 from scipy.spatial.distance import mahalanobis
 from scipy.stats import scoreatpercentile
 from sklearn.ensemble import IsolationForest
@@ -22,8 +22,11 @@ from subprocess import check_call
 
 from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
+from _compare_layout import plot_graph_compare, display_model
 
 from util import delimiter_dict
+
+SCRIPTDIR=dirname(abspath(__file__))
 
 CONTAMIN=.05
 
@@ -36,15 +39,67 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 input_layout = html.Div(
     id= 'input_layout',
     children= [
+        html.Div(children= [
+        html.Img(src='https://raw.githubusercontent.com/pnlbwh/freesurfer-analysis/multi-user/docs/pnl-bwh-hms.png'),
+        dcc.Markdown(
+"""[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.3762476.svg)](https://doi.org/10.5281/zenodo.3762476) [![Python](https://img.shields.io/badge/Python-3.6-green.svg)]() [![Platform](https://img.shields.io/badge/Platform-linux--64%20%7C%20osx--64%20%7C%20win--64-orange.svg)]()
 
-        'Text file with rows for subjects and columns for features ',
-        html.Br(),
-        dcc.Upload(
+Billah, Tashrif; Bouix, Sylvain; *FreeSurfer outlier analysis tool*, https://github.com/pnlbwh/freesurfer-analysis, 2020, 
+DOI: 10.5281/zenodo.3762476
+
+---
+
+**freesurfer-analysis** is an interactive statistics visualization tool. Assuming the statistics are normally distributed, 
+elements in the statistics beyond ±2 standard deviations are classified as outliers. More details about the tool can be found [here](https://github.com/pnlbwh/freesurfer-analysis/blob/multi-user-dgraph/docs/description.pdf).
+Input to the tool is a summary table with **rows for subjects** and **columns for regions** obtained from FreeSurfer statistics 
+of a set of subjects. Although the tool is developed for analyzing FreeSurfer statistics, it can be readily employed with 
+other statistics having a summary table such as those obtained from Tract-Based Spatial Statistics (TBSS) study.
+
+* Input can be provided from PNL server or your computer. However, output is always written to PNL server.
+    * When on a PNL workstation or HPC node through NoMachine, use **From PNL server** option
+    * When data is totally in your laptop, use **From your computer** option
+* If demographic information is provided, then outliers are corrected considering their effect.
+* If FreeSurfer directory template is provided, static ROI snapshots are rendered.
+"""),
+        html.Hr(),], id='introduction'),
+
+
+        # style={'color':'purple'} does not work
+        html.B('Mandatory inputs', id='m-inputs'),
+        html.Div(id='input-section', children=[
+
+            'Text file with rows for subjects and columns for features',
+            html.Br(),
+            html.Details(children= [
+                html.Summary('From PNL server'),
+                html.Br(),
+                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                dcc.Dropdown(
+                    id='filename-dropdown',
+                    options=[{'label': '', 'value': '/'}],
+                    value='',
+                    placeholder= '/abs/path/to/file (*csv,*tsv)',
+                    className= 'path-selector'
+                ),
+
+                html.Div(id='dropdown-select', className='filename-class')
+            ]),
+
+            html.Br(),
+            html.B('OR'),
+            html.Br(),
+            html.Br(),
+
+            html.Details(children= [
+            html.Summary('From your computer'),
+            html.Br(),
+            dcc.Upload(
             id='csv',
             children=html.Div([
                 'Drag and Drop or ',
                 html.A('Select Files'),
-                html.Div(id='filename'),
+                html.Div(id='filename-select', className='filename-class'),
             ]),
 
             style={
@@ -56,11 +111,11 @@ input_layout = html.Div(
                 'textAlign': 'center',
                 # 'margin': '10px',      # margin from left
                 # 'lineHeight': '40px'   # height of a carriage return
-            },
-        ),
+            }
+            )]),
 
-        html.Br(),
-        'Output directory ',
+        html.Hr(),
+        'Enter output directory and press enter',
         html.Br(),
         dcc.Input(
             value='',
@@ -68,7 +123,7 @@ input_layout = html.Div(
             placeholder='Output directory ',
             debounce=True,
             style={
-                'width': '20%',
+                'width': '20vw',
                 # 'height': '40px',
                 # 'lineHeight': '40px',
                 'borderWidth': '1px',
@@ -99,6 +154,7 @@ input_layout = html.Div(
             value= 2,
             type= 'number'
         ),
+
         html.Br(),
         'Delimiter ',
         html.Br(),
@@ -115,9 +171,101 @@ input_layout = html.Div(
                 # 'margin': '10px'
             },
             value= 'comma'
-        ),
+        )]),
 
         html.Br(),
+
+        # style={'color':'darkgrey'} does not work
+        html.B('Optional inputs', id='o-inputs'),
+        html.Div(id='dgraph-section',
+            children= html.Details(children=[
+            html.Summary('Demographics'),
+            html.Br(),
+            'Text file with rows for subjects and columns for demographics',
+            html.Br(),
+
+            html.Details(children=[
+                html.Summary('From PNL server'),
+                html.Br(),
+                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                dcc.Dropdown(
+                    id='dgraph-dropdown',
+                    options=[{'label': '', 'value': '/'}],
+                    value='',
+                    placeholder='/abs/path/to/file (*csv,*tsv)',
+                    className= 'path-selector'
+                ),
+
+                html.Div(id='dgraph-dropdown-select', className='filename-class')
+            ]),
+
+            html.Br(),
+            html.B('OR'),
+            html.Br(),
+            html.Br(),
+
+            html.Details(children=[
+                html.Summary('From your computer'),
+                html.Br(),
+                dcc.Upload(
+                    id='participants',
+                    children=html.Div([
+                        'Drag and Drop or ',
+                        html.A('Select Files'),
+                        html.Div(id='dgraph-filename-select', className='filename-class'),
+                    ]),
+
+                    style={
+                        'width': '400px',
+                        'height': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'dashed',
+                        'borderRadius': '5px',  # curvature of the border
+                        'textAlign': 'center',
+                        # 'margin': '10px',      # margin from left
+                        # 'lineHeight': '40px'   # height of a carriage return
+                    }
+                )]),
+
+            html.Hr(),
+            'Control group',
+            html.Br(),
+            dcc.Input(
+                id='control',
+                style={
+                    'width': '20vw',
+                    # 'height': '40px',
+                    # 'lineHeight': '40px',
+                    'borderWidth': '1px',
+                    # 'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    # 'margin': '10px'
+                },
+                # value='checking_bin==3'
+            ),
+
+            html.Br(),
+            'Predictor in regression',
+            html.Br(),
+            dcc.Input(
+                id='effect',
+                style={
+                    'width': '20vw',
+                    # 'height': '40px',
+                    # 'lineHeight': '40px',
+                    'borderWidth': '1px',
+                    # 'borderStyle': 'dashed',
+                    'borderRadius': '5px',
+                    'textAlign': 'center',
+                    # 'margin': '10px'
+                },
+                # value='checking_bin==3'
+            ),
+        ])
+        ),
+
         html.Br(),
         html.Div([
             html.Button(id='analyze',
@@ -127,27 +275,31 @@ input_layout = html.Div(
             style={'float': 'center', 'display': 'inline-block'}),
 
         dcc.Loading(id='parse summary and compute zscore', fullscreen= True, debug=True, type='graph'),
-        html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
 
         # Other dcc.Input()
-
         dcc.Store(id='df'),
         dcc.Store(id='subjects'),
-
+        dcc.Store(id='dfcombined'),
         # other dcc.Store()
 
-        html.Div(id='user-inputs'),
-
         html.Br(),
-        dcc.Link('See outliers summary', href='/summary'),
-        html.Br(),
-        dcc.Link('See outliers in graphs', href='/graphs'),
-        html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
-        html.Br(),
-        html.Br(),
-        html.Br(),
-        dcc.Link('Perform multivariate analysis', href='/multivar'),
+        html.Div(id='results', children=[
+            html.Div('Analysis complete! Now you can browse through the summary below!', id='analyze-status'),
+            html.Br(),
+            dcc.Link('See outliers summary', href='/summary'),
+            html.Br(),
+            dcc.Link('See outliers in graphs and GLM fitting', id='compare-link', style={'display': 'none'}, href='/compare'),
+            dcc.Link('See (raw) outliers in graphs', href='/graphs'),
+            html.Br(),
+            dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
+            html.Br(),
+            html.Br(),
+            # using html.Button just for style's sake
+            html.Div([
+                html.Button(children=dcc.Link('Multivariate', href='/multivar'),
+                            title='Direct to multivariate analysis')],
+                style={'float': 'center', 'display': 'inline-block'})
+        ], style={'display': 'none'})
 
     ],
     style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
@@ -160,7 +312,7 @@ graph_layout= html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
+        dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
         html.Br(),
         dcc.Link('See outliers summary', href='/summary'),
         html.Br(),
@@ -185,13 +337,45 @@ graph_layout= html.Div(
 )
 
 
+compare_layout = html.Div(
+    id= 'compare_layout',
+    children= [
+
+        dcc.Link('Go back to inputs', href='/user'),
+        html.Br(),
+        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
+        html.Br(),
+        html.Br(),
+
+        html.Div([
+            dcc.Dropdown(
+                id='region-compare',
+            )
+        ],
+            style={'width': '48%', 'display': 'inline-block'}),
+
+
+        html.Br(),
+        'Corrected outliers, superimposed on the uncorrected ones, accounting for standard scores of the residuals:',
+        dcc.Graph(id='stat-graph-compare'),
+        dcc.Graph(id='model-graph'),
+        html.Br(),
+        dcc.Markdown(id='model-summary'),
+        html.Br()
+        ],
+
+    style={'display': 'block', 'height': '0', 'overflow': 'hidden'}
+
+)
+
+
 table_layout= html.Div(
     id= 'table_layout',
     children= [
 
     dcc.Link('Go back to inputs', href='/user'),
     html.Br(),
-    dcc.Link('See outliers in graphs', href='/graphs'),
+    dcc.Link('See (raw) outliers in graphs', href='/graphs'),
     html.Br(),
     dcc.Link('See outliers summary', href='/summary'),
     html.Br(),
@@ -199,7 +383,9 @@ table_layout= html.Div(
     html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
-    'Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer',
+    'Enter freesurfer directory template and press enter',
+    html.Br(),
+    html.I('Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer'),
     html.Br(),
     dcc.Input(
         value='',
@@ -241,9 +427,9 @@ summary_layout = html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
-        dcc.Link('See outliers in graphs', href='/graphs'),
+        dcc.Link('See (raw) outliers in graphs', href='/graphs'),
         html.Br(),
-        dcc.Link('See outliers in table', href='/zscores'),
+        dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
         html.Br(),
         'Group outliers by: ',
         html.Div([
@@ -320,7 +506,7 @@ multiv_layout = html.Div(
             value='',
             debounce=True,
             id='higher',
-            #placeholder='HIGH'
+            # placeholder='HIGH'
         ),
         html.Br(),
         html.Div([
@@ -373,50 +559,172 @@ app.layout = html.Div([
 
     # purpose of refresh is not understood
     html.Div(id='main-content',
-             children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout]),
+             children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout, compare_layout]),
     dcc.Location(id='url', refresh=False),
     html.Br()
 ])
 
 
+# callback for selected file
+@app.callback(Output('dropdown-select', 'children'),
+              [Input('filename-dropdown', 'value')])
+def upload(filename):
+
+    if isfile(filename):
+        ext= splitext(filename)[-1]
+        if ext in ['.csv', '.txt', '.tsv']:
+            return 'Selected: '+filename
+    else:
+        raise PreventUpdate
+
+# callback for selected file
+@app.callback(Output('dgraph-dropdown-select', 'children'),
+              [Input('dgraph-dropdown', 'value')])
+def upload(filename):
+
+    if isfile(filename):
+        ext = splitext(filename)[-1]
+        if ext in ['.csv', '.txt', '.tsv']:
+            return 'Selected: ' + filename
+    else:
+        raise PreventUpdate
+
 
 # callback for uploaded file
-@app.callback(Output('filename', 'children'),
-              [Input('csv', 'contents'), Input('csv', 'filename')])
-def upload(status, filename):
-    if not status:
+@app.callback(Output('filename-select', 'children'),
+              [Input('csv', 'filename')])
+def upload(filename):
+    if not filename:
         raise PreventUpdate
 
     return 'Loaded: '+filename
 
-# callback for input_layout
-@app.callback([Output('region', 'options'), Output('df', 'data'), Output('subjects','data'),
+# callback for uploaded file
+@app.callback(Output('dgraph-filename-select', 'children'),
+              [Input('participants', 'filename')])
+def upload(filename):
+    if not filename:
+        raise PreventUpdate
+
+    return 'Loaded: '+filename
+
+
+
+# searchable and dynamically updating dropdown menu
+@app.callback(Output('filename-dropdown', 'options'),
+              [Input('filename-dropdown', 'search_value')])
+def list_dir(dir):
+
+    if not (dir and isdir(dir)):
+        raise PreventUpdate
+
+    dirdict= [{'label':dir, 'value':dir}]
+    for d in listdir(dir):
+        attr= pjoin(dir, d)
+        dirdict.append({'label': attr, 'value': attr})
+
+    return dirdict
+
+
+# searchable and dynamically updating dropdown menu
+@app.callback(Output('dgraph-dropdown', 'options'),
+              [Input('dgraph-dropdown', 'search_value')])
+def list_dir(dir):
+
+    if not (dir and isdir(dir)):
+        raise PreventUpdate
+
+    dirdict= [{'label':dir, 'value':dir}]
+    for d in listdir(dir):
+        attr= pjoin(dir, d)
+        dirdict.append({'label': attr, 'value': attr})
+
+    return dirdict
+
+
+# callback for input_layout / GLM analysis
+# df.data will hold residuals= predicted-given
+# dfcombined.data will hold a combined DataFrame of given and demographics
+@app.callback([Output('region', 'options'), Output('region-compare', 'options'),
+               Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
-              [Input('csv','contents'), Input('delimiter','value'),
-               Input('outDir', 'value'), Input('analyze', 'n_clicks')])
-def analyze(raw_contents, delimiter, outDir, analyze):
+              [Input('csv','contents'), Input('csv','filename'), Input('filename-dropdown', 'value'),
+               Input('participants','contents'), Input('dgraph-dropdown', 'value'),
+               Input('delimiter','value'), Input('outDir', 'value'),
+               Input('effect','value'), Input('control','value'),
+               Input('analyze', 'n_clicks')])
+def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_server_filename,
+            delimiter, outDir, effect, control, analyze):
 
     if not analyze:
         raise PreventUpdate
 
-    _, contents = raw_contents.split(',')
-    decoded = base64.b64decode(contents)
-    df_raw = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+    if server_filename:
+        # load from PNL server
+        df=pd.read_csv(server_filename)
+        filename= basename(server_filename)
 
-    subjects = df_raw[df_raw.columns[0]].values
-    regions = df_raw.columns.values[1:]
-    # do the analysis here
-    options = [{'label': i, 'value': i} for i in regions]
+    else:
+        # load from your computer
+        _, contents = raw_contents.split(',')
+        decoded = base64.b64decode(contents)
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
 
     outDir= abspath(outDir)
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
 
+
+    if dgraph_contents or dgraph_server_filename:
+        # when loaded through dcc.Upload(), Dash app will not have any knowledge of input path
+        # so save the content of filename in outDir so that can be used for further analysis
+        summaryCsv= pjoin(outDir, filename)
+        df.to_csv(summaryCsv, index= False)
+
+        if dgraph_server_filename:
+            df= pd.read_csv(dgraph_server_filename)
+
+        else:
+            _, contents = dgraph_contents.split(',')
+            decoded = base64.b64decode(contents)
+            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')), sep=delimiter_dict[delimiter])
+
+        partiCsv= pjoin(outDir, '.participants.csv')
+        df.to_csv(partiCsv, index= False)
+
+        exe= pjoin(SCRIPTDIR, 'combine_demography.py')
+        cmd= f'python {exe} -i {summaryCsv} -o {outDir} -p {partiCsv} -c "{control}"'
+        check_call(cmd, shell=True)
+
+
+        # python scripts/correct_for_demography.py -i asegstats_combined.csv -c asegstats_control.csv -e age
+        # -p participants.csv -o dem_corrected/
+        prefix= filename.split('.csv')[0]
+        outPrefix= pjoin(outDir, prefix)
+        exe= pjoin(SCRIPTDIR, 'correct_for_demography.py')
+        cmd= f'python {exe} -i {outPrefix}_combined.csv -c {outPrefix}_control.csv -p {partiCsv} -e "{effect}" ' \
+             f'-o {outDir}'
+        check_call(cmd, shell=True)
+
+        exog = '_'.join(effect.split('+'))
+        residuals= f'{outPrefix}_{exog}_residuals.csv'
+        # raw_contents being overwritten by residuals, our new feature for further analysis
+        df= pd.read_csv(residuals)
+
+        dfcombined= pd.read_csv(f'{outPrefix}_combined.csv')
+
+
+    subjects = df[df.columns[0]].values
+    regions = df.columns.values[1:]
+    options = [{'label': i, 'value': i} for i in regions]
+
+    # df is reset to residuals
     filename= pjoin(outDir, 'zscores.csv')
-    df_scores= df_raw.copy()
+    # this block has to be done after prediction and residuals
+    df_scores= df.copy()
     for column_name in regions:
         print(column_name)
-        _, inliers, zscores= plot_graph(df_raw, column_name)
+        _, inliers, zscores= plot_graph(df, column_name)
 
         # write outlier summary
         df_scores[column_name] = zscores
@@ -424,8 +732,28 @@ def analyze(raw_contents, delimiter, outDir, analyze):
 
     df_scores.to_csv(filename, index=False)
 
+    # df.data will hold residuals= predicted-given
+    # dfcombined.data will hold a combined DataFrame of given and demographics
+    if dgraph_contents:
+        return (options, options,
+                df.to_dict('list'), dfcombined.to_dict('list'), subjects,
+                True, {'display': 'block'})
+    else:
+        return (options, options,
+                df.to_dict('list'), df.to_dict('list'), subjects,
+                True, {'display': 'block'})
 
-    return (options, df_raw.to_dict('list'), subjects, True, {'display': 'block'})
+
+
+@app.callback([Output('results', 'style'), Output('compare-link', 'style')],
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+def display_link(dgraph_contents, df, dgraph_server_filename):
+    if (dgraph_contents or dgraph_server_filename) and df:
+        return ({'display':'block'}, {'display':'block'})
+    elif df:
+        return ({'display':'block'}, {'display':'none'})
+    else:
+        raise PreventUpdate
 
 
 
@@ -519,10 +847,34 @@ def show_multiv_summary(df, outDir, activate, method, PERCENT_LOW, PERCENT_HIGH)
     return [multiv_summary.to_dict('records'), [{'name': i, 'id': i} for i in columns], True]
 
 
+
+# callback for compare_layout
+@app.callback(
+    [Output('stat-graph-compare', 'figure'),
+     Output('model-graph', 'figure'),
+     Output('model-summary', 'children')],
+    [Input('dfcombined','data'), Input('df','data'),
+     Input('region-compare', 'value'), Input('extent', 'value'),
+     Input('outDir','value')])
+def update_graph(df, df_resid, region, extent, outDir):
+
+    if not region:
+        raise PreventUpdate
+
+    df= pd.DataFrame(df)
+    df_resid= pd.DataFrame(df_resid)
+
+    fig, _, _ = plot_graph_compare(df, df_resid, region, extent)
+    model, summary = display_model(region, outDir)
+
+
+    return (fig, model, summary)
+
+
 # callback for graph_layout
 @app.callback(
     Output('stat-graph', 'figure'),
-    [Input('df','data'), Input('region','value'), Input('extent','value')])
+    [Input('dfcombined','data'), Input('region','value'), Input('extent','value')])
 def update_graph(df, region, extent):
 
     if not region:
@@ -659,10 +1011,11 @@ def update_summary(subjects, outDir, extent, group_by):
 
 
 
-@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout', 'multiv_layout']],
+@app.callback([Output(page, 'style') for page in ['input_layout', 'graph_layout', 'table_layout', 'summary_layout',
+                                                  'multiv_layout', 'compare_layout']],
               [Input('url', 'pathname')])
 def display_page(pathname):
-    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(5)]
+    display_layout = [{'display': 'block', 'height': '0', 'overflow': 'hidden'} for _ in range(6)]
 
     if pathname == '/graphs':
         display_layout[1] = {'display': 'auto'}
@@ -672,6 +1025,8 @@ def display_page(pathname):
         display_layout[3] = {'display': 'auto'}
     elif pathname == '/multivar':
         display_layout[4] = {'display': 'auto'}
+    elif pathname == '/compare':
+        display_layout[5] = {'display': 'auto'}
     else:
         display_layout[0] = {'display': 'auto'}
 

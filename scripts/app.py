@@ -233,6 +233,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
             html.Br(),
             dcc.Input(
                 id='control',
+                debounce=True,
                 style={
                     'width': '20vw',
                     # 'height': '40px',
@@ -251,6 +252,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
             html.Br(),
             dcc.Input(
                 id='effect',
+                debounce=True,
                 style={
                     'width': '20vw',
                     # 'height': '40px',

@@ -67,3 +67,14 @@ hr {
 #introduction {
     width: 70vw;
 }
+
+.type-inst {
+    font-style: italic;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.type-inst li {
+    margin-bottom: 0;
+}
+

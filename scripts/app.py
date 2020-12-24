@@ -72,8 +72,13 @@ other statistics having a summary table such as those obtained from Tract-Based 
             html.Br(),
             html.Details(children= [
                 html.Summary('From PNL server'),
-                html.Br(),
-                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                html.Div(className='type-inst', children=[
+                    'Type in the box below--',
+                    html.Li('suggestion menu will update as you type'),
+                    html.Li('yet you must type up to the last directory'),
+                    html.Li('then select a file from the dropdown menu'),
+                ]),
 
                 dcc.Dropdown(
                     id='filename-dropdown',
@@ -186,8 +191,13 @@ other statistics having a summary table such as those obtained from Tract-Based 
 
             html.Details(children=[
                 html.Summary('From PNL server'),
-                html.Br(),
-                html.I('Suggestion menu will update as you type, still you must type full path'),
+
+                html.Div(className='type-inst', children=[
+                    'Type in the box below--',
+                    html.Li('suggestion menu will update as you type'),
+                    html.Li('yet you must type up to the last directory'),
+                    html.Li('then select a file from the dropdown menu'),
+                ]),
 
                 dcc.Dropdown(
                     id='dgraph-dropdown',

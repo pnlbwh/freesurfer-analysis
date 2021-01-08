@@ -23,12 +23,12 @@ def stats2table(caselist, template, outDir, measure='volume', delimiter='comma')
     modified_env= environ.copy()
     modified_env['SUBJECTS_DIR']= tmpdir
     for hemi in ['lh', 'rh']:
-        cmd = f'python2 {fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d {delimiter} ' \
+        cmd = f'{fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d {delimiter} ' \
               f'--skip -t {outDir}/aparcstats_{hemi}.csv'
         check_call(cmd, shell=True, env=modified_env)
 
 
-    cmd = f'python2 {fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d {delimiter} ' \
+    cmd = f'{fsbin}/asegstats2table --subjectsfile={caselist} -m {measure} -d {delimiter} ' \
           f'--skip -t {outDir}/asegstats.csv'
     check_call(cmd, shell=True, env=modified_env)
     

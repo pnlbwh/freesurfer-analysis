@@ -332,7 +332,41 @@ Open http://localhost:8053 to view the effect of demographics
 
 # Troubleshooting
 
-* `Address already in use`: The error implies that the port mentioned in 
+### Provide proper delimiter
+
+Provide -d
+
+```bash
+Traceback (most recent call last):
+  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\analyze-stats.py", line 162, in <module>
+    value=regions[0]
+IndexError: index 0 is out of bounds for axis 0 with size 0
+Traceback (most recent call last):
+  File ".\generate-summary.py", line 176, in <module>
+    sleep(60)
+```
+
+The program parses csv files (comma separated) by default. If you provide a tsv file (tab separated) as input, 
+please also provide `-d tab`. Notably, FreeSurfer `stats/*.stats` files are tab separated.
+
+
+
+### aparcstats2table `SyntaxError`
+
+If you get the following error, please upgrade your FreeSurfer to 7.1.0. See details in [this](https://github.com/pnlbwh/freesurfer-analysis/commit/acd7c6ebf4ecec493d539b617332f2edd72f45b8) commit.
+
+```bash
+  File "/data/pnl/soft/pnlpipe3/fs7.1.0/bin/aparcstats2table", line 2
+    [ ! -e "$FREESURFER_HOME" ] && echo "error: freesurfer has not been properly sourced" && exit 1
+      ^
+SyntaxError: invalid syntax
+```
+
+
+
+### Port already in use
+
+`Address already in use`: The error implies that the port mentioned in 
 `app.run_server(debug=False, port= 8040, host= 'localhost')` is already in use.
 
 
@@ -389,20 +423,7 @@ to your home directory, edit them, and finally define environment variable:
     export DASH_PORTS=/path/to/your/ports.cfg
 
 
-* Provide -d
 
-```bash
-Traceback (most recent call last):
-  File "C:\Users\tashr\Documents\GitHub\freesurfer-analysis\scripts\analyze-stats.py", line 162, in <module>
-    value=regions[0]
-IndexError: index 0 is out of bounds for axis 0 with size 0
-Traceback (most recent call last):
-  File ".\generate-summary.py", line 176, in <module>
-    sleep(60)
-```
-
-The program parses csv files (comma separated) by default. 
-If you provide a tsv file (tab separated) as input, please also provide `-d tab`.
 
 
 # Reference

@@ -673,7 +673,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     if server_filename:
         # load from PNL server
-        df=pd.read_csv(server_filename)
+        df=pd.read_csv(server_filename, sep=delimiter_dict[delimiter])
         filename= basename(server_filename)
 
     else:
@@ -694,7 +694,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         df.to_csv(summaryCsv, index= False)
 
         if dgraph_server_filename:
-            df= pd.read_csv(dgraph_server_filename)
+            df= pd.read_csv(dgraph_server_filename, sep=delimiter_dict[delimiter])
 
         else:
             _, contents = dgraph_contents.split(',')

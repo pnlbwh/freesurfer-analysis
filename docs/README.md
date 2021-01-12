@@ -334,7 +334,7 @@ Open http://localhost:8053 to view the effect of demographics
 
 ### Provide proper delimiter
 
-Provide -d
+If you get an `IndexError` on your console like:
 
 ```bash
 Traceback (most recent call last):
@@ -346,8 +346,14 @@ Traceback (most recent call last):
     sleep(60)
 ```
 
-The program parses csv files (comma separated) by default. If you provide a tsv file (tab separated) as input, 
-please also provide `-d tab`. Notably, FreeSurfer `stats/*.stats` files are tab separated.
+or an improper format in your webpage like:
+
+![](delimiter_error.png)
+
+You need to a provide a proper `-d` on the command line or a `Delimiter` value on the webpage. 
+Supported Delimiters are `{comma,tab,space,semicolon}`. The program parses csv files (comma separated) by default. 
+You can find out the delimiter used in your input by opening the input using `vi`. 
+Notably, FreeSurfer `stats/*.stats` files are `tab` separated. If you provide them as inputs, please also provide `-d tab`. 
 
 
 

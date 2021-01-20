@@ -33,11 +33,6 @@ log= logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 def plot_graph_compare(df, df_resid, region, NUM_STD=2):
-    '''
-    :param region:
-    :param NUM_STD: acceptable range of standard deviation
-    :return:
-    '''
 
     subjects = df[df.columns[0]].values
     L = len(subjects)

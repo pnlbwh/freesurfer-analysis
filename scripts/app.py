@@ -655,7 +655,7 @@ def list_dir(dir):
 
 
 # callback for input_layout / GLM analysis
-# df.data will hold residuals= predicted-given
+# df.data will hold residuals=predicted-given
 # dfcombined.data will hold a combined DataFrame of given and demographics
 @app.callback([Output('region', 'options'), Output('region-compare', 'options'),
                Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
@@ -732,7 +732,6 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     # df is reset to residuals
     filename= pjoin(outDir, 'zscores.csv')
-    # this block has to be done after prediction and residuals
     df_scores= df.copy()
     for column_name in regions:
         print(column_name)
@@ -744,7 +743,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     df_scores.to_csv(filename, index=False)
 
-    # df.data will hold residuals= predicted-given
+    # df.data will hold residuals=predicted-given
     # dfcombined.data will hold a combined DataFrame of given and demographics
     if dgraph_contents:
         return (options, options,

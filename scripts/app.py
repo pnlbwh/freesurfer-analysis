@@ -745,7 +745,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     # df.data will hold residuals=predicted-given
     # dfcombined.data will hold a combined DataFrame of given and demographics
-    if dgraph_contents:
+    if dgraph_contents or dgraph_server_filename:
         return (options, options,
                 df.to_dict('list'), dfcombined.to_dict('list'), subjects,
                 True, {'display': 'block'})

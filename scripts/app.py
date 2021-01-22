@@ -324,6 +324,8 @@ graph_layout= html.Div(
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
+        dcc.Link('See outliers in graphs and GLM fitting', id='glm-tab', style={'display': 'none'}, href='/compare'),
+
         dcc.Link('See outliers in table and ROI snapshots', href='/zscores'),
         html.Br(),
         dcc.Link('See outliers summary', href='/summary'),
@@ -766,6 +768,14 @@ def display_link(dgraph_contents, df, dgraph_server_filename):
     else:
         raise PreventUpdate
 
+
+@app.callback(Output('glm-tab', 'style'),
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+def display_link(dgraph_contents, df, dgraph_server_filename):
+    if (dgraph_contents or dgraph_server_filename) and df:
+        return {'display':'block'}
+    else:
+        raise PreventUpdate
 
 
 # callback within multiv_layout

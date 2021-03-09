@@ -50,7 +50,7 @@ On Python 3, installation of dependencies can be as simple as:
 
 `FreeSurfer` installation comes with `asegstats2table` & `aparcstats2table` scripts that can combine subject level 
 `freesurfer/stats/*stats` files in to a combined tsv/csv file. However, the scripts require all subject `freesurfer/` 
-in one directory. This requirement cannot be met when data are organized according BIDS format. 
+to be in one directory. This requirement cannot be met when data are organized according BIDS format. 
 In the latter, subject `freesurfer/` will be in `sub-*/ses-*/anat/freesurfer/` like directories.
 
 For the scripts to work with BIDS data, one must generate symbolic links to all subject `freesurfer/` in one directory. 

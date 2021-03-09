@@ -48,7 +48,22 @@ On Python 3, installation of dependencies can be as simple as:
 
 * Generate input table from FreeSurfer statistics:
 
+`FreeSurfer` installation comes with `asegstats2table` & `aparcstats2table` scripts that can combine subject level 
+`freesurfer/stats/*stats` files in to a combined tsv/csv file. However, the scripts require all subject `freesurfer/` 
+in one directory. This requirement cannot be met when data are organized according BIDS format. 
+In the latter, subject `freesurfer/` will be in `sub-*/ses-*/anat/freesurfer/` like directories.
+
+For the scripts to work with BIDS data, one must generate symbolic links to all subject `freesurfer/` in one directory. 
+To faciliate this hack, we wrote a script `scripts\stats2table.py` that will--
+
+* read BIDS organized `freesurfer/` outputs
+* create symbolic links in a temporary directory
+* generate the combined aseg and aparc files
+
+
 > python scripts\stats2table.py -c path\to\caselist.txt -t "path\to\sub-*\anat\freesurfer" -o \tmp\fs-stats
+
+
 
 
 

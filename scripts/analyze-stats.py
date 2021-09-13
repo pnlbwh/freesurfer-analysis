@@ -33,7 +33,7 @@ def plot_graph(region, NUM_STD=2):
     L = len(subjects)
     val_mean = df[region].values.mean()
     val_std = df[region].values.std()
-    # we need val_mean and val_std anyway so no using scipy.stats.zscore function
+    # we need val_mean and val_std anyway so not using scipy.stats.zscore function
     zscores = np.array([round((y - val_mean) / val_std, 4) if val_std else 0 for y in df[region].values])
     inliers = abs(zscores) <= NUM_STD
 

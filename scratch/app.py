@@ -117,12 +117,15 @@ other statistics having a summary table such as those obtained from Tract-Based 
 
     ]),
         
-    
-        html.Button(id='up',
-                n_clicks_timestamp=0,
-                children='↑↑',
-                title='Go back one directory'),
-        
+        html.Div(
+            html.Button(id='up',
+                        n_clicks_timestamp=0,
+                        children='↑↑',
+                        title='Go back one directory'),
+                        style={'float': 'right', 'display': 'block'}
+        ),
+                
+        html.Br(),
         html.Div(id= 'empty',
         children=[DataTable(
         id='table',

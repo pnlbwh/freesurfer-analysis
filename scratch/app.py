@@ -120,7 +120,10 @@ other statistics having a summary table such as those obtained from Tract-Based 
         html.Div(
             html.Button(id='up',
                         n_clicks_timestamp=0,
-                        children='↑↑',
+                        # children='↑↑',
+                        children=[html.Div(html.Img(
+                        # src='https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/32x32/shadow/folder_up.png'))],
+                        src='assets/folder_up.png'))],
                         title='Go back one directory'),
                         style={'float': 'right', 'display': 'block'}
         ),

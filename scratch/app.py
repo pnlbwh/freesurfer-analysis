@@ -22,8 +22,6 @@ from tempfile import mkstemp
 
 from subprocess import check_call
 
-df=pd.DataFrame(columns=['/'], data=[f'{d}' for d in glob('/*')])
-
 SCRIPTDIR=dirname(abspath(__file__))
 
 CONTAMIN=.05
@@ -33,6 +31,21 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
                 title='Outlier detection')
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
+
+
+def _glob(dir):
+
+    items= glob(pjoin(dir, '*'))
+    filtered= []
+    for item in items:
+        if isdir(item) or item.endswith('.txt') or item.endswith('.csv'):
+            filtered.append(item)
+
+    return [pjoin(dir,item) for item in filtered]
+
+
+df=pd.DataFrame(columns=['/'], data=_glob('/'))
+
 
 app.layout = html.Div(
     children= [
@@ -147,12 +160,12 @@ def get_active_cell(selected_cells):
         # print(temp)
         
         old_dir= temp['column_id']
-        old_list= [pjoin(old_dir,d) for d in glob(pjoin(old_dir, '*'))]
+        old_list= _glob(old_dir)
         
         row= temp['row']
         
         new_dir= old_list[row]
-        new_list= [pjoin(new_dir,d) for d in glob(pjoin(new_dir, '*'))]
+        new_list= _glob(new_dir)
 
         # print(new_dir)
         
@@ -181,7 +194,7 @@ def update_table(up, columns):
         
         old_dir= dirname(columns[0]['id'])
         df=pd.DataFrame(columns=[old_dir], 
-            data=[pjoin(old_dir, d) for d in glob(pjoin(old_dir, '*'))])
+            data=_glob(old_dir))
         
         return DataTable(
             id='table',

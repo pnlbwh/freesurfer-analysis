@@ -36,6 +36,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
+
+host=getenv("HOST", "127.0.0.1")
+port=getenv("PORT", "8050")
+url_base_pathname=getenv("DASH_URL_BASE_PATHNAME")
+app_url=f'http://{host}:{port}{url_base_pathname}'
+
+
 input_layout = html.Div(
     id= 'input_layout',
     children= [
@@ -321,6 +328,12 @@ other statistics having a summary table such as those obtained from Tract-Based 
 graph_layout= html.Div(
     id= 'graph_layout',
     children= [
+
+        html.Div(
+            id='new-instance',
+            children=dcc.Link('Start over', href=app_url, refresh= True),
+            style={'float': 'right', 'display': 'inline-block'}
+        ),
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),

@@ -172,6 +172,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
         html.Br(),
         dcc.Input(
             id='delimiter',
+            debounce=True,
             style={
                 'width': '20%',
                 # 'height': '40px',

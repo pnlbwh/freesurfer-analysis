@@ -24,9 +24,12 @@ from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
 from _compare_layout import plot_graph_compare, display_model
 
-from util import delimiter_dict
+from util import delimiter_dict, _glob
 
 SCRIPTDIR=dirname(abspath(__file__))
+
+# initial list of items
+df=pd.DataFrame(columns=['/'], data=_glob('/'))
 
 CONTAMIN=.05
 
@@ -81,11 +84,47 @@ other statistics having a summary table such as those obtained from Tract-Based 
                 html.Summary('From PNL server'),
 
                 html.Div(className='type-inst', children=[
-                    'Type in the box below--',
-                    html.Li('suggestion menu will update as you type'),
-                    html.Li('yet you must type up to the last directory'),
-                    html.Li('then select a file from the dropdown menu'),
+                    'Select a csv/tsv/txt file from the file browser below--',
                 ]),
+
+
+
+                html.Div(
+                    html.Button(
+                        id='parent-dir',
+                        n_clicks_timestamp=0,
+                        # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
+                        children=html.Img(src='assets/folder_up.png'),
+                        title='Go back one directory'
+                    ),
+                    style={'float': 'right', 'display': 'inline-block'}
+                ),
+                html.Br(),
+                html.Div(
+                    id='listdir-div',
+                    children=DataTable(
+                        id='listdir',
+                        columns=[{'name': f'{i}',
+                                  'id': i,
+                                  'hideable': False,
+                                  'type': 'text',
+                                  } for i in df.columns],
+                        data=df.to_dict('records'),
+                        filter_action='none',
+                        sort_action='none',
+                        style_cell={
+                            'textAlign': 'left',
+                            'whiteSpace': 'pre-wrap',
+                            'width': '20px'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(230, 230, 230)',
+                            'fontWeight': 'bold'
+                        }
+                    )
+                ),
+
+
 
                 dcc.Dropdown(
                     id='filename-dropdown',
@@ -593,6 +632,77 @@ app.layout = html.Div([
 ])
 
 
+
+@app.callback([Output('listdir', 'data'),Output('listdir', 'columns')],
+              Input('listdir', 'selected_cells'))
+def get_active_cell(selected_cells):
+
+    if selected_cells:
+        temp = selected_cells[0]
+        # print(temp)
+        
+        old_dir= temp['column_id']
+        old_list= _glob(old_dir)
+        
+        row= temp['row']
+        
+        new_dir= old_list[row]
+        new_list= _glob(new_dir)
+
+        # print(new_dir)
+        
+        df=pd.DataFrame(columns=[new_dir], data=new_list)
+        
+        columns=[{'name': new_dir,
+                  'id': new_dir,
+                  'hideable': True,
+                  'type': 'text'
+                  }]
+        
+        return df.to_dict('records'), columns
+
+    raise PreventUpdate
+
+
+@app.callback(Output('listdir-div', 'children'),
+              [Input('parent-dir', 'n_clicks'), Input('listdir','columns')])
+def update_table(_, columns):
+
+    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
+
+    if 'parent-dir' in changed:
+        
+        # print(changed)
+        
+        old_dir= dirname(columns[0]['id'])
+        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
+        
+        return DataTable(
+            id='listdir',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
+    else:
+        raise PreventUpdate
+
+
+
 # callback for selected file
 @app.callback(Output('dropdown-select', 'children'),
               [Input('filename-dropdown', 'value')])
@@ -676,7 +786,7 @@ def list_dir(dir):
 @app.callback([Output('region', 'options'), Output('region-compare', 'options'),
                Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
-              [Input('csv','contents'), Input('csv','filename'), Input('filename-dropdown', 'value'),
+              [Input('csv','contents'), Input('csv','filename'), Input('listdir', 'columns'),
                Input('participants','contents'), Input('dgraph-dropdown', 'value'),
                Input('delimiter','value'), Input('outDir', 'value'),
                Input('effect','value'), Input('control','value'),
@@ -689,6 +799,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     if server_filename:
         # load from PNL server
+        server_filename= server_filename[0]['id']
         df=pd.read_csv(server_filename, sep=delimiter_dict[delimiter])
         filename= basename(server_filename)
 

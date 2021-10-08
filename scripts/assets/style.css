@@ -78,3 +78,7 @@ hr {
     margin-bottom: 0;
 }
 
+#listdir button.show-hide {
+    display: none
+}
+

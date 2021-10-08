@@ -118,46 +118,47 @@ other statistics having a summary table such as those obtained from Tract-Based 
     ]),
         
         html.Div(
-            html.Button(id='up',
-                        n_clicks_timestamp=0,
-                        children=[html.Div(html.Img(
-                        # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
-                        src='assets/folder_up.png'))],
-                        title='Go back one directory'),
-                        style={'float': 'right', 'display': 'inline-block'}
+            html.Button(
+                id='parent-dir',
+                n_clicks_timestamp=0,
+                # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
+                children=html.Img(src='assets/folder_up.png'),
+                title='Go back one directory'
+            ),
+            style={'float': 'right', 'display': 'inline-block'}
         ),
-                
         html.Br(),
-        html.Div(id= 'empty',
-        children=[DataTable(
-        id='table',
-        columns=[{'name': f'{i}',
-                  'id': i,
-                  'hideable': False,
-                  'type': 'text',
-                  } for i in df.columns],
-        data=df.to_dict('records'),
-        filter_action='none',
-        sort_action='none',
-        style_cell={
-            'textAlign': 'left',
-            'whiteSpace': 'pre-wrap',
-            'width': '20px'
-        },
-
-        style_header={
-            'backgroundColor': 'rgb(230, 230, 230)',
-            'fontWeight': 'bold'
-        })
-        ])
+        html.Div(
+            id='listdir-div',
+            children=DataTable(
+                id='listdir',
+                columns=[{'name': f'{i}',
+                          'id': i,
+                          'hideable': False,
+                          'type': 'text',
+                          } for i in df.columns],
+                data=df.to_dict('records'),
+                filter_action='none',
+                sort_action='none',
+                style_cell={
+                    'textAlign': 'left',
+                    'whiteSpace': 'pre-wrap',
+                    'width': '20px'
+                },
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold'
+                }
+            )
+        )
         
-        ]
+    ]
         
 )
 
 
-@app.callback([Output('table', 'data'),Output('table', 'columns')],
-              Input('table', 'selected_cells'))
+@app.callback([Output('listdir', 'data'),Output('listdir', 'columns')],
+              Input('listdir', 'selected_cells'))
 def get_active_cell(selected_cells):
 
     if selected_cells:
@@ -187,13 +188,13 @@ def get_active_cell(selected_cells):
     raise PreventUpdate
     
 
-@app.callback(Output('empty', 'children'),
-              [Input('up', 'n_clicks'), Input('table','columns')])
-def update_table(up, columns):
+@app.callback(Output('listdir-div', 'children'),
+              [Input('parent-dir', 'n_clicks'), Input('listdir','columns')])
+def update_table(_, columns):
 
     changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
 
-    if 'up' in changed:
+    if 'parent-dir' in changed:
         
         # print(changed)
         
@@ -202,7 +203,7 @@ def update_table(up, columns):
             data=_glob(old_dir))
         
         return DataTable(
-            id='table',
+            id='listdir',
             columns=[{'name': f'{i}',
                       'id': i,
                       'hideable': False,

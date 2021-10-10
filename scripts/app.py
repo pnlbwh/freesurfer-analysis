@@ -430,7 +430,13 @@ graph_layout= html.Div(
 compare_layout = html.Div(
     id= 'compare_layout',
     children= [
-
+        
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'}
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
         dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -463,6 +469,12 @@ table_layout= html.Div(
     id= 'table_layout',
     children= [
 
+    html.Button(
+        dcc.Link('start over', href=app_url, refresh=True),
+        style={'float': 'right', 'display': 'inline-block'}
+    ),
+    html.Br(),
+        
     dcc.Link('Go back to inputs', href='/user'),
     html.Br(),
     dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -515,6 +527,12 @@ summary_layout = html.Div(
     id= 'summary_layout',
     children= [
 
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'}
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
         dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -566,6 +584,12 @@ multiv_layout = html.Div(
     id= 'multiv_layout',
     children= [
 
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'}
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
 
@@ -598,6 +622,7 @@ multiv_layout = html.Div(
             id='higher',
             # placeholder='HIGH'
         ),
+        html.Br(),
         html.Br(),
         html.Div([
             html.Button(id='multiv-button',
@@ -647,7 +672,6 @@ multiv_layout = html.Div(
 
 app.layout = html.Div([
 
-    # purpose of refresh is not understood
     html.Div(id='main-content',
              children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout, compare_layout]),
     dcc.Location(id='url', refresh=False),

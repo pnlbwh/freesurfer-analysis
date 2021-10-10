@@ -73,7 +73,12 @@ other statistics having a summary table such as those obtained from Tract-Based 
 """),
         html.Hr(),], id='introduction'),
 
-
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'}
+        ),
+        html.Br(),
+        
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[
@@ -385,12 +390,13 @@ other statistics having a summary table such as those obtained from Tract-Based 
 graph_layout= html.Div(
     id= 'graph_layout',
     children= [
-
-        html.Div(
-            id='new-instance',
-            children=dcc.Link('Start over', href=app_url, refresh= True),
+        
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
             style={'float': 'right', 'display': 'inline-block'}
         ),
+        html.Br(),
+        
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
@@ -868,6 +874,12 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         makedirs(outDir, exist_ok= True)
 
 
+    tmp= dgraph_server_filename[0]['id']
+    if isfile(tmp):
+        dgraph_server_filename= tmp
+    else:
+        dgraph_server_filename= None
+        
     if dgraph_contents or dgraph_server_filename:
         # when loaded through dcc.Upload(), Dash app will not have any knowledge of input path
         # so save the content of filename in outDir so that can be used for further analysis
@@ -875,7 +887,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         df.to_csv(summaryCsv, index= False)
 
         if dgraph_server_filename:
-            dgraph_server_filename= dgraph_server_filename[0]['id']
+            dgraph_server_filename= dgraph_server_filename
             df= pd.read_csv(dgraph_server_filename, sep=delimiter_dict[delimiter])
 
         else:

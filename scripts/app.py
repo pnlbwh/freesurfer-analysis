@@ -229,21 +229,47 @@ other statistics having a summary table such as those obtained from Tract-Based 
 
             html.Details(children=[
                 html.Summary('From PNL server'),
-
+                
                 html.Div(className='type-inst', children=[
-                    'Type in the box below--',
-                    html.Li('suggestion menu will update as you type'),
-                    html.Li('yet you must type up to the last directory'),
-                    html.Li('then select a file from the dropdown menu'),
+                    'Select a csv/tsv/txt file from the file browser below--',
                 ]),
 
-                dcc.Dropdown(
-                    id='dgraph-dropdown',
-                    options=[{'label': '', 'value': '/'}],
-                    value='',
-                    placeholder='/abs/path/to/file (*csv,*tsv)',
-                    className= 'path-selector'
+
+                html.Div(
+                    html.Button(
+                        id='parent-dir-dgraph',
+                        n_clicks_timestamp=0,
+                        # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
+                        children=html.Img(src='assets/folder_up.png'),
+                        title='Go back one directory'
+                    ),
+                    style={'float': 'right', 'display': 'inline-block'}
                 ),
+                html.Br(),
+                html.Div(
+                    id='listdir-div-dgraph',
+                    children=DataTable(
+                        id='listdir-dgraph',
+                        columns=[{'name': f'{i}',
+                                  'id': i,
+                                  'hideable': False,
+                                  'type': 'text',
+                                  } for i in df.columns],
+                        data=df.to_dict('records'),
+                        filter_action='none',
+                        sort_action='none',
+                        style_cell={
+                            'textAlign': 'left',
+                            'whiteSpace': 'pre-wrap',
+                            'width': '20px'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(230, 230, 230)',
+                            'fontWeight': 'bold'
+                        }
+                    )
+                ),
+
 
                 html.Div(id='dgraph-dropdown-select', className='filename-class')
             ]),
@@ -694,6 +720,76 @@ def update_table(_, columns):
 
 
 
+@app.callback([Output('listdir-dgraph', 'data'),Output('listdir-dgraph', 'columns')],
+              Input('listdir-dgraph', 'selected_cells'))
+def get_active_cell(selected_cells):
+
+    if selected_cells:
+        temp = selected_cells[0]
+        # print(temp)
+        
+        old_dir= temp['column_id']
+        old_list= _glob(old_dir)
+        
+        row= temp['row']
+        
+        new_dir= old_list[row]
+        new_list= _glob(new_dir)
+
+        # print(new_dir)
+        
+        df=pd.DataFrame(columns=[new_dir], data=new_list)
+        
+        columns=[{'name': new_dir,
+                  'id': new_dir,
+                  'hideable': True,
+                  'type': 'text'
+                  }]
+        
+        return df.to_dict('records'), columns
+
+    raise PreventUpdate
+
+
+@app.callback(Output('listdir-div-dgraph', 'children'),
+              [Input('parent-dir-dgraph', 'n_clicks'), Input('listdir-dgraph','columns')])
+def update_table(_, columns):
+
+    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
+
+    if 'parent-dir-dgraph' in changed:
+        
+        # print(changed)
+        
+        old_dir= dirname(columns[0]['id'])
+        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
+        
+        return DataTable(
+            id='listdir',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
+    else:
+        raise PreventUpdate
+
+
+
 # callback for selected file
 @app.callback(Output('dropdown-select', 'children'),
               [Input('listdir', 'columns')])
@@ -705,15 +801,15 @@ def upload(columns):
     else:
         raise PreventUpdate
 
+
 # callback for selected file
 @app.callback(Output('dgraph-dropdown-select', 'children'),
-              [Input('dgraph-dropdown', 'value')])
-def upload(filename):
+              [Input('listdir-dgraph', 'columns')])
+def upload(columns):
 
+    filename= columns[0]['id']
     if isfile(filename):
-        ext = splitext(filename)[-1]
-        if ext in ['.csv', '.txt', '.tsv']:
-            return 'Selected: ' + filename
+        return 'Selected: '+filename
     else:
         raise PreventUpdate
 
@@ -727,6 +823,7 @@ def upload(filename):
 
     return 'Loaded: '+filename
 
+
 # callback for uploaded file
 @app.callback(Output('dgraph-filename-select', 'children'),
               [Input('participants', 'filename')])
@@ -737,22 +834,6 @@ def upload(filename):
     return 'Loaded: '+filename
 
 
-# searchable and dynamically updating dropdown menu
-@app.callback(Output('dgraph-dropdown', 'options'),
-              [Input('dgraph-dropdown', 'search_value')])
-def list_dir(dir):
-
-    if not (dir and isdir(dir)):
-        raise PreventUpdate
-
-    dirdict= [{'label':dir, 'value':dir}]
-    for d in listdir(dir):
-        attr= pjoin(dir, d)
-        dirdict.append({'label': attr, 'value': attr})
-
-    return dirdict
-
-
 # callback for input_layout / GLM analysis
 # df.data will hold residuals=predicted-given
 # dfcombined.data will hold a combined DataFrame of given and demographics
@@ -760,7 +841,7 @@ def list_dir(dir):
                Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
               [Input('csv','contents'), Input('csv','filename'), Input('listdir', 'columns'),
-               Input('participants','contents'), Input('dgraph-dropdown', 'value'),
+               Input('participants','contents'), Input('listdir-dgraph', 'columns'),
                Input('delimiter','value'), Input('outDir', 'value'),
                Input('effect','value'), Input('control','value'),
                Input('analyze', 'n_clicks')])
@@ -794,6 +875,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         df.to_csv(summaryCsv, index= False)
 
         if dgraph_server_filename:
+            dgraph_server_filename= dgraph_server_filename[0]['id']
             df= pd.read_csv(dgraph_server_filename, sep=delimiter_dict[delimiter])
 
         else:
@@ -857,9 +939,9 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
 
 @app.callback([Output('results', 'style'), Output('compare-link', 'style')],
-              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('listdir-dgraph', 'columns')])
 def display_link(dgraph_contents, df, dgraph_server_filename):
-    if (dgraph_contents or dgraph_server_filename) and df:
+    if (dgraph_contents or isfile(dgraph_server_filename[0]['id'])) and df:
         return ({'display':'block'}, {'display':'block'})
     elif df:
         return ({'display':'block'}, {'display':'none'})
@@ -868,9 +950,9 @@ def display_link(dgraph_contents, df, dgraph_server_filename):
 
 
 @app.callback(Output('glm-tab', 'style'),
-              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('listdir-dgraph', 'columns')])
 def display_link(dgraph_contents, df, dgraph_server_filename):
-    if (dgraph_contents or dgraph_server_filename) and df:
+    if (dgraph_contents or isfile(dgraph_server_filename[0]['id'])) and df:
         return {'display':'block'}
     else:
         raise PreventUpdate

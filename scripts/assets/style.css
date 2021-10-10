@@ -82,3 +82,7 @@ hr {
     display: none
 }
 
+#listdir-dgraph button.show-hide {
+    display: none
+}
+

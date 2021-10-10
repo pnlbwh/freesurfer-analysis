@@ -125,15 +125,6 @@ other statistics having a summary table such as those obtained from Tract-Based 
                 ),
 
 
-
-                dcc.Dropdown(
-                    id='filename-dropdown',
-                    options=[{'label': '', 'value': '/'}],
-                    value='',
-                    placeholder= '/abs/path/to/file (*csv,*tsv)',
-                    className= 'path-selector'
-                ),
-
                 html.Div(id='dropdown-select', className='filename-class')
             ]),
 
@@ -705,13 +696,12 @@ def update_table(_, columns):
 
 # callback for selected file
 @app.callback(Output('dropdown-select', 'children'),
-              [Input('filename-dropdown', 'value')])
-def upload(filename):
-
+              [Input('listdir', 'columns')])
+def upload(columns):
+    
+    filename= columns[0]['id']
     if isfile(filename):
-        ext= splitext(filename)[-1]
-        if ext in ['.csv', '.txt', '.tsv']:
-            return 'Selected: '+filename
+        return 'Selected: '+filename
     else:
         raise PreventUpdate
 
@@ -745,23 +735,6 @@ def upload(filename):
         raise PreventUpdate
 
     return 'Loaded: '+filename
-
-
-
-# searchable and dynamically updating dropdown menu
-@app.callback(Output('filename-dropdown', 'options'),
-              [Input('filename-dropdown', 'search_value')])
-def list_dir(dir):
-
-    if not (dir and isdir(dir)):
-        raise PreventUpdate
-
-    dirdict= [{'label':dir, 'value':dir}]
-    for d in listdir(dir):
-        attr= pjoin(dir, d)
-        dirdict.append({'label': attr, 'value': attr})
-
-    return dirdict
 
 
 # searchable and dynamically updating dropdown menu

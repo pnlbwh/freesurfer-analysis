@@ -871,6 +871,17 @@ def upload(filename):
     return 'Loaded: '+filename
 
 
+# allow button click only upon provision of outDir
+@app.callback(Output('analyze', 'disabled'),
+              Input('outDir', 'value'))
+def activate_analyze(value):
+
+    if not value:
+        return True
+    else:
+        return False
+
+
 # callback for input_layout / GLM analysis
 # df.data will hold residuals=predicted-given
 # dfcombined.data will hold a combined DataFrame of given and demographics

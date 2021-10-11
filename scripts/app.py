@@ -183,8 +183,22 @@ other statistics having a summary table such as those obtained from Tract-Based 
                 # 'margin': '10px'
               },
         ),
-
         html.Br(),
+        'Delimiter ',
+        html.Br(),
+        html.Div(
+            dcc.Dropdown(
+                id='delimiter',
+                options=[
+                    {'label': 'comma', 'value': 'comma'},
+                    {'label': 'tab', 'value': 'tab'},
+                    {'label': 'semicolon', 'value': 'semicolon'},
+                    {'label': 'space', 'value': 'space'}
+                ],
+                value='comma',
+            ),
+            style={'width':'20vw'}
+        ),
         html.Br(),
         'Acceptable zscore ',
         html.Br(),
@@ -204,25 +218,8 @@ other statistics having a summary table such as those obtained from Tract-Based 
             value= 2,
             type= 'number'
         ),
-
-        html.Br(),
-        'Delimiter ',
-        html.Br(),
-        dcc.Input(
-            id='delimiter',
-            debounce=True,
-            style={
-                'width': '20%',
-                # 'height': '40px',
-                # 'lineHeight': '40px',
-                'borderWidth': '1px',
-                # 'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                # 'margin': '10px'
-            },
-            value= 'comma'
-        )]),
+        
+        ]),
 
         html.Br(),
 
@@ -414,9 +411,7 @@ graph_layout= html.Div(
         html.H2('Standard scores of subjects for each region'),
         html.Div([
             dcc.Dropdown(
-                id='region',
-                # options=[{'label': i, 'value': i} for i in regions],
-                # value=regions[0]
+                id='region'
             )
         ],
         style={'width': '48%', 'display': 'inline-block'},
@@ -556,7 +551,8 @@ summary_layout = html.Div(
         ],
         style = {'width': '20%'}),
 
-
+        html.Br(),
+        
         DataTable(
             id='summary',
             filter_action='native',

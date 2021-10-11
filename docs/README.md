@@ -72,7 +72,7 @@ To faciliate this hack, we wrote a script `scripts\stats2table.py` that will--
 *Graphical user interface*
 
 All users can access the web application at https://pnlservers.bwh.harvard.edu/dash/ . The web application will write 
-outputs to a directory of your choice in the PNL file system--`/rfanfs/` or `/data/pnl/`. You do not need VPN or SSH 
+outputs to a directory of your choice in the PNL file system--`/rfanfs/pnl-zorro/` or `/data/pnl/`. You do not need VPN or SSH 
 to access the web application. However, you need a username and password which can be obtained by 
 emailing sylvain@bwh.harvard.edu
 
@@ -80,11 +80,14 @@ Alternatively, you can launch the web application at your lab as follows:
 
     export PORT=8050
     export DASH_URL_BASE_PATHNAME=/dash/
+    export INIT_DIR=/data/pnl/
     
     python scripts/app.py
     firefox http://localhost:${PORT}/${DASH_URL_BASE_PATHNAME}
 
-The default is http://localhost:8050
+* The app will show items of `${INIT_DIR}` in `From PNL server` input sections
+* The default app URL is http://localhost:8050
+
 
 
 Follow the direction in the webpage to be able to run the tool:

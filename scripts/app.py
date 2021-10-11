@@ -880,6 +880,9 @@ def activate_analyze(value):
         return True
     else:
         return False
+# a pop up warning could also be used to inform the user of missing outDir
+# https://dash.plotly.com/dash-core-components/confirmdialog
+# but hooking it up to 'analyze' button click while bypassing analyze() callback can be hard
 
 
 # callback for input_layout / GLM analysis

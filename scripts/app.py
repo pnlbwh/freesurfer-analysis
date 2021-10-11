@@ -29,7 +29,8 @@ from util import delimiter_dict, _glob
 SCRIPTDIR=dirname(abspath(__file__))
 
 # initial list of items
-df=pd.DataFrame(columns=['/'], data=_glob('/'))
+init_dir= getenv("INIT_DIR",'/')
+df=pd.DataFrame(columns=[init_dir], data=_glob(init_dir))
 
 CONTAMIN=.05
 

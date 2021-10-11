@@ -71,6 +71,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
     * When data is totally in your laptop, use **From your computer** option
 * If demographic information is provided, then outliers are corrected considering their effect.
 * If FreeSurfer directory template is provided, static ROI snapshots are rendered.
+* Press **Enter** after writing in each input box.
 """),
         html.Hr(),], id='introduction'),
 
@@ -164,7 +165,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
             )]),
 
         html.Hr(),
-        'Enter output directory and press enter',
+        'Output directory',
         html.Br(),
         dcc.Input(
             value='',
@@ -490,7 +491,7 @@ table_layout= html.Div(
     html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
-    'Enter freesurfer directory template and press enter',
+    'FreeSurfer output directory template',
     html.Br(),
     html.I('Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer'),
     html.Br(),

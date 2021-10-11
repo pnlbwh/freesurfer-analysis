@@ -76,7 +76,8 @@ other statistics having a summary table such as those obtained from Tract-Based 
 
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
-            style={'float': 'right', 'display': 'inline-block'}
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
         ),
         html.Br(),
         
@@ -394,7 +395,8 @@ graph_layout= html.Div(
         
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
-            style={'float': 'right', 'display': 'inline-block'}
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
         ),
         html.Br(),
         
@@ -434,7 +436,8 @@ compare_layout = html.Div(
         
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
-            style={'float': 'right', 'display': 'inline-block'}
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
         ),
         html.Br(),
         
@@ -472,7 +475,8 @@ table_layout= html.Div(
 
     html.Button(
         dcc.Link('start over', href=app_url, refresh=True),
-        style={'float': 'right', 'display': 'inline-block'}
+        style={'float': 'right', 'display': 'inline-block'},
+        className='start-over'
     ),
     html.Br(),
         
@@ -530,7 +534,8 @@ summary_layout = html.Div(
 
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
-            style={'float': 'right', 'display': 'inline-block'}
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
         ),
         html.Br(),
         
@@ -587,7 +592,8 @@ multiv_layout = html.Div(
 
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
-            style={'float': 'right', 'display': 'inline-block'}
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
         ),
         html.Br(),
         

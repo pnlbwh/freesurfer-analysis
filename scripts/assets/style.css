@@ -27,14 +27,14 @@ body {
 #input-section {
     border-color: purple;
     border-style: solid;
-    width: fit-content;
+    width: 50vw;
     padding: 20px;
 }
 
 #dgraph-section {
     border-color: darkgrey;
     border-style: solid;
-    width: fit-content;
+    width: 50vw;
     padding: 20px;
 }
 
@@ -42,7 +42,7 @@ body {
 #results {
     border-color: green;
     border-style: solid;
-    width: fit-content;
+    width: 50vw;
     padding: 20px;
 }
 

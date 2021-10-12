@@ -24,9 +24,13 @@ from _table_layout import plot_graph, show_table
 from view_roi import load_lut, render_roi
 from _compare_layout import plot_graph_compare, display_model
 
-from util import delimiter_dict
+from util import delimiter_dict, _glob
 
 SCRIPTDIR=dirname(abspath(__file__))
+
+# initial list of items
+init_dir= getenv("INIT_DIR",'/')
+df=pd.DataFrame(columns=[init_dir], data=_glob(init_dir))
 
 CONTAMIN=.05
 
@@ -35,6 +39,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
                 title='Outlier detection')
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
+
+
+host=getenv("HOST", "127.0.0.1")
+port=getenv("PORT", "8050")
+url_base_pathname=getenv("DASH_URL_BASE_PATHNAME")
+app_url=f'http://{host}:{port}{url_base_pathname}'
+
 
 input_layout = html.Div(
     id= 'input_layout',
@@ -60,10 +71,17 @@ other statistics having a summary table such as those obtained from Tract-Based 
     * When data is totally in your laptop, use **From your computer** option
 * If demographic information is provided, then outliers are corrected considering their effect.
 * If FreeSurfer directory template is provided, static ROI snapshots are rendered.
+* Press **Enter** after writing in each input box.
 """),
-        html.Hr(),], id='introduction'),
-
-
+        html.Hr(),
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
+        )],
+        id='introduction'),
+        html.Br(),
+        
         # style={'color':'purple'} does not work
         html.B('Mandatory inputs', id='m-inputs'),
         html.Div(id='input-section', children=[
@@ -74,19 +92,46 @@ other statistics having a summary table such as those obtained from Tract-Based 
                 html.Summary('From PNL server'),
 
                 html.Div(className='type-inst', children=[
-                    'Type in the box below--',
-                    html.Li('suggestion menu will update as you type'),
-                    html.Li('yet you must type up to the last directory'),
-                    html.Li('then select a file from the dropdown menu'),
+                    'Select a csv/tsv/txt file from the file browser below--',
                 ]),
 
-                dcc.Dropdown(
-                    id='filename-dropdown',
-                    options=[{'label': '', 'value': '/'}],
-                    value='',
-                    placeholder= '/abs/path/to/file (*csv,*tsv)',
-                    className= 'path-selector'
+
+
+                html.Div(
+                    html.Button(
+                        id='parent-dir',
+                        n_clicks_timestamp=0,
+                        # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
+                        children=html.Img(src='assets/folder_up.png'),
+                        title='Go back one directory'
+                    ),
+                    style={'float': 'right', 'display': 'inline-block'}
                 ),
+                html.Br(),
+                html.Div(
+                    id='listdir-div',
+                    children=DataTable(
+                        id='listdir',
+                        columns=[{'name': f'{i}',
+                                  'id': i,
+                                  'hideable': False,
+                                  'type': 'text',
+                                  } for i in df.columns],
+                        data=df.to_dict('records'),
+                        filter_action='none',
+                        sort_action='none',
+                        style_cell={
+                            'textAlign': 'left',
+                            'whiteSpace': 'pre-wrap',
+                            'width': '20px'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(230, 230, 230)',
+                            'fontWeight': 'bold'
+                        }
+                    )
+                ),
+
 
                 html.Div(id='dropdown-select', className='filename-class')
             ]),
@@ -120,7 +165,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
             )]),
 
         html.Hr(),
-        'Enter output directory and press enter',
+        'Output directory',
         html.Br(),
         dcc.Input(
             value='',
@@ -138,8 +183,22 @@ other statistics having a summary table such as those obtained from Tract-Based 
                 # 'margin': '10px'
               },
         ),
-
         html.Br(),
+        'Delimiter ',
+        html.Br(),
+        html.Div(
+            dcc.Dropdown(
+                id='delimiter',
+                options=[
+                    {'label': 'comma', 'value': 'comma'},
+                    {'label': 'tab', 'value': 'tab'},
+                    {'label': 'semicolon', 'value': 'semicolon'},
+                    {'label': 'space', 'value': 'space'}
+                ],
+                value='comma',
+            ),
+            style={'width':'20vw'}
+        ),
         html.Br(),
         'Acceptable zscore ',
         html.Br(),
@@ -159,24 +218,8 @@ other statistics having a summary table such as those obtained from Tract-Based 
             value= 2,
             type= 'number'
         ),
-
-        html.Br(),
-        'Delimiter ',
-        html.Br(),
-        dcc.Input(
-            id='delimiter',
-            style={
-                'width': '20%',
-                # 'height': '40px',
-                # 'lineHeight': '40px',
-                'borderWidth': '1px',
-                # 'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                # 'margin': '10px'
-            },
-            value= 'comma'
-        )]),
+        
+        ]),
 
         html.Br(),
 
@@ -191,21 +234,47 @@ other statistics having a summary table such as those obtained from Tract-Based 
 
             html.Details(children=[
                 html.Summary('From PNL server'),
-
+                
                 html.Div(className='type-inst', children=[
-                    'Type in the box below--',
-                    html.Li('suggestion menu will update as you type'),
-                    html.Li('yet you must type up to the last directory'),
-                    html.Li('then select a file from the dropdown menu'),
+                    'Select a csv/tsv/txt file from the file browser below--',
                 ]),
 
-                dcc.Dropdown(
-                    id='dgraph-dropdown',
-                    options=[{'label': '', 'value': '/'}],
-                    value='',
-                    placeholder='/abs/path/to/file (*csv,*tsv)',
-                    className= 'path-selector'
+
+                html.Div(
+                    html.Button(
+                        id='parent-dir-dgraph',
+                        n_clicks_timestamp=0,
+                        # https://d1nhio0ox7pgb.cloudfront.net/_img/v_collection_png/48x48/shadow/folder_up.png'
+                        children=html.Img(src='assets/folder_up.png'),
+                        title='Go back one directory'
+                    ),
+                    style={'float': 'right', 'display': 'inline-block'}
                 ),
+                html.Br(),
+                html.Div(
+                    id='listdir-div-dgraph',
+                    children=DataTable(
+                        id='listdir-dgraph',
+                        columns=[{'name': f'{i}',
+                                  'id': i,
+                                  'hideable': False,
+                                  'type': 'text',
+                                  } for i in df.columns],
+                        data=df.to_dict('records'),
+                        filter_action='none',
+                        sort_action='none',
+                        style_cell={
+                            'textAlign': 'left',
+                            'whiteSpace': 'pre-wrap',
+                            'width': '20px'
+                        },
+                        style_header={
+                            'backgroundColor': 'rgb(230, 230, 230)',
+                            'fontWeight': 'bold'
+                        }
+                    )
+                ),
+
 
                 html.Div(id='dgraph-dropdown-select', className='filename-class')
             ]),
@@ -321,6 +390,14 @@ other statistics having a summary table such as those obtained from Tract-Based 
 graph_layout= html.Div(
     id= 'graph_layout',
     children= [
+        
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
+        ),
+        html.Br(),
+        
 
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
@@ -334,9 +411,7 @@ graph_layout= html.Div(
         html.H2('Standard scores of subjects for each region'),
         html.Div([
             dcc.Dropdown(
-                id='region',
-                # options=[{'label': i, 'value': i} for i in regions],
-                # value=regions[0]
+                id='region'
             )
         ],
         style={'width': '48%', 'display': 'inline-block'},
@@ -354,7 +429,14 @@ graph_layout= html.Div(
 compare_layout = html.Div(
     id= 'compare_layout',
     children= [
-
+        
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
         dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -387,6 +469,13 @@ table_layout= html.Div(
     id= 'table_layout',
     children= [
 
+    html.Button(
+        dcc.Link('start over', href=app_url, refresh=True),
+        style={'float': 'right', 'display': 'inline-block'},
+        className='start-over'
+    ),
+    html.Br(),
+        
     dcc.Link('Go back to inputs', href='/user'),
     html.Br(),
     dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -397,7 +486,7 @@ table_layout= html.Div(
     html.H2('Standard scores of subjects for each feature'),
     html.Br(),
     dcc.Store(id='dfscores'),
-    'Enter freesurfer directory template and press enter',
+    'FreeSurfer output directory template',
     html.Br(),
     html.I('Example: /data/pnl/HCP/derivatives/pnlpipe/sub-*/ses-01/anat/freesurfer'),
     html.Br(),
@@ -439,6 +528,13 @@ summary_layout = html.Div(
     id= 'summary_layout',
     children= [
 
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
         dcc.Link('See (raw) outliers in graphs', href='/graphs'),
@@ -455,7 +551,8 @@ summary_layout = html.Div(
         ],
         style = {'width': '20%'}),
 
-
+        html.Br(),
+        
         DataTable(
             id='summary',
             filter_action='native',
@@ -490,6 +587,13 @@ multiv_layout = html.Div(
     id= 'multiv_layout',
     children= [
 
+        html.Button(
+            dcc.Link('start over', href=app_url, refresh=True),
+            style={'float': 'right', 'display': 'inline-block'},
+            className='start-over'
+        ),
+        html.Br(),
+        
         dcc.Link('Go back to inputs', href='/user'),
         html.Br(),
 
@@ -522,6 +626,7 @@ multiv_layout = html.Div(
             id='higher',
             # placeholder='HIGH'
         ),
+        html.Br(),
         html.Br(),
         html.Div([
             html.Button(id='multiv-button',
@@ -571,7 +676,6 @@ multiv_layout = html.Div(
 
 app.layout = html.Div([
 
-    # purpose of refresh is not understood
     html.Div(id='main-content',
              children=[input_layout, graph_layout, table_layout, summary_layout, multiv_layout, compare_layout]),
     dcc.Location(id='url', refresh=False),
@@ -579,27 +683,167 @@ app.layout = html.Div([
 ])
 
 
-# callback for selected file
-@app.callback(Output('dropdown-select', 'children'),
-              [Input('filename-dropdown', 'value')])
-def upload(filename):
 
-    if isfile(filename):
-        ext= splitext(filename)[-1]
-        if ext in ['.csv', '.txt', '.tsv']:
-            return 'Selected: '+filename
+@app.callback([Output('listdir', 'data'),Output('listdir', 'columns')],
+              Input('listdir', 'selected_cells'))
+def get_active_cell(selected_cells):
+
+    if selected_cells:
+        temp = selected_cells[0]
+        # print(temp)
+        
+        old_dir= temp['column_id']
+        old_list= _glob(old_dir)
+        
+        row= temp['row']
+        
+        new_dir= old_list[row]
+        new_list= _glob(new_dir)
+
+        # print(new_dir)
+        
+        df=pd.DataFrame(columns=[new_dir], data=new_list)
+        
+        columns=[{'name': new_dir,
+                  'id': new_dir,
+                  'hideable': True,
+                  'type': 'text'
+                  }]
+        
+        return df.to_dict('records'), columns
+
+    raise PreventUpdate
+
+
+@app.callback(Output('listdir-div', 'children'),
+              [Input('parent-dir', 'n_clicks'), Input('listdir','columns')])
+def update_table(_, columns):
+
+    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
+
+    if 'parent-dir' in changed:
+        
+        # print(changed)
+        
+        old_dir= dirname(columns[0]['id'])
+        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
+        
+        return DataTable(
+            id='listdir',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
     else:
         raise PreventUpdate
 
+
+
+@app.callback([Output('listdir-dgraph', 'data'),Output('listdir-dgraph', 'columns')],
+              Input('listdir-dgraph', 'selected_cells'))
+def get_active_cell(selected_cells):
+
+    if selected_cells:
+        temp = selected_cells[0]
+        # print(temp)
+        
+        old_dir= temp['column_id']
+        old_list= _glob(old_dir)
+        
+        row= temp['row']
+        
+        new_dir= old_list[row]
+        new_list= _glob(new_dir)
+
+        # print(new_dir)
+        
+        df=pd.DataFrame(columns=[new_dir], data=new_list)
+        
+        columns=[{'name': new_dir,
+                  'id': new_dir,
+                  'hideable': True,
+                  'type': 'text'
+                  }]
+        
+        return df.to_dict('records'), columns
+
+    raise PreventUpdate
+
+
+@app.callback(Output('listdir-div-dgraph', 'children'),
+              [Input('parent-dir-dgraph', 'n_clicks'), Input('listdir-dgraph','columns')])
+def update_table(_, columns):
+
+    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
+
+    if 'parent-dir-dgraph' in changed:
+        
+        # print(changed)
+        
+        old_dir= dirname(columns[0]['id'])
+        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
+        
+        return DataTable(
+            id='listdir',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
+    else:
+        raise PreventUpdate
+
+
+
+# callback for selected file
+@app.callback(Output('dropdown-select', 'children'),
+              [Input('listdir', 'columns')])
+def upload(columns):
+    
+    filename= columns[0]['id']
+    if isfile(filename):
+        return 'Selected: '+filename
+    else:
+        raise PreventUpdate
+
+
 # callback for selected file
 @app.callback(Output('dgraph-dropdown-select', 'children'),
-              [Input('dgraph-dropdown', 'value')])
-def upload(filename):
+              [Input('listdir-dgraph', 'columns')])
+def upload(columns):
 
+    filename= columns[0]['id']
     if isfile(filename):
-        ext = splitext(filename)[-1]
-        if ext in ['.csv', '.txt', '.tsv']:
-            return 'Selected: ' + filename
+        return 'Selected: '+filename
     else:
         raise PreventUpdate
 
@@ -613,6 +857,7 @@ def upload(filename):
 
     return 'Loaded: '+filename
 
+
 # callback for uploaded file
 @app.callback(Output('dgraph-filename-select', 'children'),
               [Input('participants', 'filename')])
@@ -623,37 +868,18 @@ def upload(filename):
     return 'Loaded: '+filename
 
 
+# allow button click only upon provision of outDir
+@app.callback(Output('analyze', 'disabled'),
+              Input('outDir', 'value'))
+def activate_analyze(value):
 
-# searchable and dynamically updating dropdown menu
-@app.callback(Output('filename-dropdown', 'options'),
-              [Input('filename-dropdown', 'search_value')])
-def list_dir(dir):
-
-    if not (dir and isdir(dir)):
-        raise PreventUpdate
-
-    dirdict= [{'label':dir, 'value':dir}]
-    for d in listdir(dir):
-        attr= pjoin(dir, d)
-        dirdict.append({'label': attr, 'value': attr})
-
-    return dirdict
-
-
-# searchable and dynamically updating dropdown menu
-@app.callback(Output('dgraph-dropdown', 'options'),
-              [Input('dgraph-dropdown', 'search_value')])
-def list_dir(dir):
-
-    if not (dir and isdir(dir)):
-        raise PreventUpdate
-
-    dirdict= [{'label':dir, 'value':dir}]
-    for d in listdir(dir):
-        attr= pjoin(dir, d)
-        dirdict.append({'label': attr, 'value': attr})
-
-    return dirdict
+    if not value:
+        return True
+    else:
+        return False
+# a pop up warning could also be used to inform the user of missing outDir
+# https://dash.plotly.com/dash-core-components/confirmdialog
+# but hooking it up to 'analyze' button click while bypassing analyze() callback can be hard
 
 
 # callback for input_layout / GLM analysis
@@ -662,8 +888,8 @@ def list_dir(dir):
 @app.callback([Output('region', 'options'), Output('region-compare', 'options'),
                Output('df', 'data'), Output('dfcombined','data'), Output('subjects','data'),
                Output('parse summary and compute zscore', 'children'), Output('analyze-status', 'style')],
-              [Input('csv','contents'), Input('csv','filename'), Input('filename-dropdown', 'value'),
-               Input('participants','contents'), Input('dgraph-dropdown', 'value'),
+              [Input('csv','contents'), Input('csv','filename'), Input('listdir', 'columns'),
+               Input('participants','contents'), Input('listdir-dgraph', 'columns'),
                Input('delimiter','value'), Input('outDir', 'value'),
                Input('effect','value'), Input('control','value'),
                Input('analyze', 'n_clicks')])
@@ -675,6 +901,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     if server_filename:
         # load from PNL server
+        server_filename= server_filename[0]['id']
         df=pd.read_csv(server_filename, sep=delimiter_dict[delimiter])
         filename= basename(server_filename)
 
@@ -689,6 +916,12 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         makedirs(outDir, exist_ok= True)
 
 
+    tmp= dgraph_server_filename[0]['id']
+    if isfile(tmp):
+        dgraph_server_filename= tmp
+    else:
+        dgraph_server_filename= None
+        
     if dgraph_contents or dgraph_server_filename:
         # when loaded through dcc.Upload(), Dash app will not have any knowledge of input path
         # so save the content of filename in outDir so that can be used for further analysis
@@ -696,6 +929,7 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
         df.to_csv(summaryCsv, index= False)
 
         if dgraph_server_filename:
+            dgraph_server_filename= dgraph_server_filename
             df= pd.read_csv(dgraph_server_filename, sep=delimiter_dict[delimiter])
 
         else:
@@ -759,9 +993,9 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
 
 @app.callback([Output('results', 'style'), Output('compare-link', 'style')],
-              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('listdir-dgraph', 'columns')])
 def display_link(dgraph_contents, df, dgraph_server_filename):
-    if (dgraph_contents or dgraph_server_filename) and df:
+    if (dgraph_contents or isfile(dgraph_server_filename[0]['id'])) and df:
         return ({'display':'block'}, {'display':'block'})
     elif df:
         return ({'display':'block'}, {'display':'none'})
@@ -770,9 +1004,9 @@ def display_link(dgraph_contents, df, dgraph_server_filename):
 
 
 @app.callback(Output('glm-tab', 'style'),
-              [Input('participants','contents'), Input('dfcombined', 'data'), Input('dgraph-dropdown', 'value')])
+              [Input('participants','contents'), Input('dfcombined', 'data'), Input('listdir-dgraph', 'columns')])
 def display_link(dgraph_contents, df, dgraph_server_filename):
-    if (dgraph_contents or dgraph_server_filename) and df:
+    if (dgraph_contents or isfile(dgraph_server_filename[0]['id'])) and df:
         return {'display':'block'}
     else:
         raise PreventUpdate

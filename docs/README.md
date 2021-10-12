@@ -81,6 +81,7 @@ Alternatively, you can launch the web application at your lab as follows:
     export PORT=8050
     export DASH_URL_BASE_PATHNAME=/dash/
     export INIT_DIR=/data/pnl/
+    export FREESURFER_HOME=/data/pnl/soft/pnlpipe3/freesurfer/
     
     python scripts/app.py
     firefox http://localhost:${PORT}/${DASH_URL_BASE_PATHNAME}

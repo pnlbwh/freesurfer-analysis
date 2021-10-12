@@ -73,13 +73,13 @@ other statistics having a summary table such as those obtained from Tract-Based 
 * If FreeSurfer directory template is provided, static ROI snapshots are rendered.
 * Press **Enter** after writing in each input box.
 """),
-        html.Hr(),], id='introduction'),
-
+        html.Hr(),
         html.Button(
             dcc.Link('start over', href=app_url, refresh=True),
             style={'float': 'right', 'display': 'inline-block'},
             className='start-over'
-        ),
+        )],
+        id='introduction'),
         html.Br(),
         
         # style={'color':'purple'} does not work

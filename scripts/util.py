@@ -14,5 +14,5 @@ def _glob(dir):
         if isdir(item) or sum([item.endswith(ext) for ext in ['.csv','.tsv','.txt']]):
             filtered.append(item)
 
-    return [pjoin(dir,item) for item in filtered]
+    return filtered
     

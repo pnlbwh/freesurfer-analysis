@@ -115,6 +115,7 @@ other statistics having a summary table such as those obtained from Tract-Based 
                         data=df.to_dict('records'),
                         filter_action='none',
                         sort_action='none',
+                        page_size=df.shape[0],
                         style_cell={
                             'textAlign': 'left',
                             'whiteSpace': 'pre-wrap',
@@ -679,8 +680,10 @@ app.layout = html.Div([
 
 
 
-@app.callback([Output('listdir', 'data'),Output('listdir', 'columns')],
-              Input('listdir', 'selected_cells'))
+# ENH: define a new table like that of the next callback
+@app.callback([Output('listdir', 'data'),Output('listdir', 'columns'),
+               Output('listdir', 'page_size')],
+               Input('listdir', 'selected_cells'))
 def get_active_cell(selected_cells):
 
     if selected_cells:
@@ -705,7 +708,7 @@ def get_active_cell(selected_cells):
                   'type': 'text'
                   }]
         
-        return df.to_dict('records'), columns
+        return df.to_dict('records'), columns, df.shape[0]
 
     raise PreventUpdate
 
@@ -733,6 +736,7 @@ def update_table(_, columns):
             data=df.to_dict('records'),
             filter_action='none',
             sort_action='none',
+            page_size=df.shape[0],
             style_cell={
                 'textAlign': 'left',
                 'whiteSpace': 'pre-wrap',
@@ -750,7 +754,7 @@ def update_table(_, columns):
 
 
 @app.callback([Output('listdir-dgraph', 'data'),Output('listdir-dgraph', 'columns')],
-              Input('listdir-dgraph', 'selected_cells'))
+               Input('listdir-dgraph', 'selected_cells'))
 def get_active_cell(selected_cells):
 
     if selected_cells:

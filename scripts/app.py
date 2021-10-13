@@ -681,14 +681,14 @@ app.layout = html.Div([
 
 
 
-# ENH: define a new table like that of the next callback
-@app.callback([Output('listdir', 'data'),Output('listdir', 'columns'),
-               Output('listdir', 'page_size')],
-               Input('listdir', 'selected_cells'))
-def get_active_cell(selected_cells):
+@app.callback(Output('listdir-div', 'children'),
+             [Input('parent-dir', 'n_clicks'), Input('listdir', 'columns'),
+              Input('listdir', 'selected_cells')])
+def update_table(_, columns, selected_cells):
 
     if selected_cells:
         temp = selected_cells[0]
+        
         # print(temp)
         
         old_dir= temp['column_id']
@@ -703,20 +703,29 @@ def get_active_cell(selected_cells):
         
         df=pd.DataFrame(columns=[new_dir], data=new_list)
         
-        columns=[{'name': new_dir,
-                  'id': new_dir,
-                  'hideable': True,
-                  'type': 'text'
-                  }]
-        
-        return df.to_dict('records'), columns, df.shape[0]
+        return DataTable(
+            id='listdir',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            page_size=df.shape[0],
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
 
-    raise PreventUpdate
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
 
-
-@app.callback(Output('listdir-div', 'children'),
-              [Input('parent-dir', 'n_clicks'), Input('listdir','columns')])
-def update_table(_, columns):
 
     changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
 
@@ -749,18 +758,19 @@ def update_table(_, columns):
                 'fontWeight': 'bold'
             },
             )
-    else:
-        raise PreventUpdate
+    
+    raise PreventUpdate
 
 
-# ENH: define a new table like that of the next callback
-@app.callback([Output('listdir-dgraph', 'data'),Output('listdir-dgraph', 'columns'),
-               Output('listdir-dgraph', 'page_size')],
-               Input('listdir-dgraph', 'selected_cells'))
-def get_active_cell(selected_cells):
+
+@app.callback(Output('listdir-div-dgraph', 'children'),
+             [Input('parent-dir-dgraph', 'n_clicks'), Input('listdir-dgraph','columns'),
+              Input('listdir-dgraph', 'selected_cells')])
+def update_table(_, columns, selected_cells):
 
     if selected_cells:
         temp = selected_cells[0]
+        
         # print(temp)
         
         old_dir= temp['column_id']
@@ -775,32 +785,8 @@ def get_active_cell(selected_cells):
         
         df=pd.DataFrame(columns=[new_dir], data=new_list)
         
-        columns=[{'name': new_dir,
-                  'id': new_dir,
-                  'hideable': True,
-                  'type': 'text'
-                  }]
-        
-        return df.to_dict('records'), columns, df.shape[0]
-
-    raise PreventUpdate
-
-
-@app.callback(Output('listdir-div-dgraph', 'children'),
-              [Input('parent-dir-dgraph', 'n_clicks'), Input('listdir-dgraph','columns')])
-def update_table(_, columns):
-
-    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
-
-    if 'parent-dir-dgraph' in changed:
-        
-        # print(changed)
-        
-        old_dir= dirname(columns[0]['id'])
-        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
-        
         return DataTable(
-            id='listdir',
+            id='listdir-dgraph',
             columns=[{'name': f'{i}',
                       'id': i,
                       'hideable': False,
@@ -821,8 +807,41 @@ def update_table(_, columns):
                 'fontWeight': 'bold'
             },
             )
-    else:
-        raise PreventUpdate
+            
+            
+    changed = [item['prop_id'] for item in dash.callback_context.triggered][0]
+
+    if 'parent-dir-dgraph' in changed:
+        
+        # print(changed)
+        
+        old_dir= dirname(columns[0]['id'])
+        df=pd.DataFrame(columns=[old_dir], data=_glob(old_dir))
+        
+        return DataTable(
+            id='listdir-dgraph',
+            columns=[{'name': f'{i}',
+                      'id': i,
+                      'hideable': False,
+                      'type': 'text',
+                      } for i in df.columns],
+            data=df.to_dict('records'),
+            filter_action='none',
+            sort_action='none',
+            page_size=df.shape[0],
+            style_cell={
+                'textAlign': 'left',
+                'whiteSpace': 'pre-wrap',
+                'width': '20px'
+            },
+
+            style_header={
+                'backgroundColor': 'rgb(230, 230, 230)',
+                'fontWeight': 'bold'
+            },
+            )
+    
+    raise PreventUpdate
 
 
 

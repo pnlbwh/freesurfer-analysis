@@ -40,12 +40,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_ca
 # log= logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
 
-
-host=getenv("HOST", "127.0.0.1")
-port=getenv("PORT", "8050")
-url_base_pathname=getenv("DASH_URL_BASE_PATHNAME")
-app_url=f'http://{host}:{port}{url_base_pathname}'
-
+app_url=getenv("DASH_URL_BASE_PATHNAME","/")
 
 input_layout = html.Div(
     id= 'input_layout',

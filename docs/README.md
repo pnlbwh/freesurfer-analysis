@@ -78,6 +78,7 @@ emailing sylvain@bwh.harvard.edu
 
 Alternatively, you can launch the web application at your lab as follows:
 
+    export DASH_DEBUG=False
     export PORT=8050
     export DASH_URL_BASE_PATHNAME=/dash/
     export INIT_DIR=/data/pnl/

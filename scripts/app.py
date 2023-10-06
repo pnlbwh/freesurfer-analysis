@@ -919,10 +919,10 @@ def analyze(raw_contents, filename, server_filename, dgraph_contents, dgraph_ser
 
     if not analyze:
         raise PreventUpdate
-
-    if server_filename:
+    
+    server_filename= server_filename[0]['id']
+    if isfile(server_filename):
         # load from PNL server
-        server_filename= server_filename[0]['id']
         df=pd.read_csv(server_filename, sep=delimiter_dict[delimiter])
         filename= basename(server_filename)
 

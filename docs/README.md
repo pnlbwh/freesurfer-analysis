@@ -74,7 +74,7 @@ To faciliate this hack, we wrote a script `scripts\stats2table.py` that will--
 All users can access the web application at https://pnlservers.bwh.harvard.edu/dash/ . The web application will write 
 outputs to a directory of your choice in the PNL file system--`/rfanfs/pnl-zorro/` or `/data/pnl/`. You do not need VPN or SSH 
 to access the web application. However, you need a username and password which can be obtained by 
-emailing sylvain@bwh.harvard.edu
+emailing {tbillah,sylvain}@bwh.harvard.edu
 
 Alternatively, you can launch the web application at your lab as follows:
 

@@ -51,7 +51,7 @@ if __name__== '__main__':
 
     parser.add_argument('-m', '--measure', default='volume',
                         help='measure extracted from stats/{asegstats,aparcstats_{lh,rh}}.tsv files, default: %(default)s. '
-                             'See `asegstats2table -h` and `aparctats2table -h` for supported measures')
+                             'See `asegstats2table -h` and `aparcstats2table -h` for supported measures')
 
     args= parser.parse_args()
     outDir= abspath(args.output)

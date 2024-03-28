@@ -7,7 +7,7 @@ from subprocess import check_call, Popen
 import argparse
 from shutil import rmtree
 
-def stats2table(caselist, template, outDir, measure='volume', delimiter='comma'):
+def stats2table(caselist, template, outDir, measure='volume', delimiter='comma', parc='aparc'):
 
     tmpdir= mkdtemp()
 
@@ -24,7 +24,7 @@ def stats2table(caselist, template, outDir, measure='volume', delimiter='comma')
     modified_env['SUBJECTS_DIR']= tmpdir
     for hemi in ['lh', 'rh']:
         cmd = f'{fsbin}/aparcstats2table --subjectsfile={caselist} --hemi={hemi} -m {measure} -d {delimiter} ' \
-              f'--skip -t {outDir}/aparcstats_{hemi}.csv'
+              f'--skip -t {outDir}/aparcstats_{hemi}.csv --parc {parc}'
         check_call(cmd, shell=True, env=modified_env)
 
 
@@ -46,6 +46,8 @@ if __name__== '__main__':
                              '"/path/to/*/freesurfer" or "/path/to/derivatives/pnlpipe/sub-*/anat/freesurfer", '
                              'where * is the placeholder for subject id')
     parser.add_argument('-o', '--output', required=True, help='a directory where outlier analysis results are saved')
+    parser.add_argument('-p', '--parc', default='aparc',
+                        help='parcellation stats to use with aparcstats2table (alternative is aparc.a2009s)')
     parser.add_argument('-d', '--delimiter', default='comma', help='delimiter to use between measures in the output table '
                                                                    '{comma,tab,space,semicolon}, default: %(default)s')
 
@@ -58,5 +60,5 @@ if __name__== '__main__':
     if not isdir(outDir):
         makedirs(outDir, exist_ok= True)
     
-    stats2table(abspath(args.caselist), args.template, outDir, args.measure, args.delimiter)
+    stats2table(abspath(args.caselist), args.template, outDir, args.measure, args.delimiter, args.parc)
 
